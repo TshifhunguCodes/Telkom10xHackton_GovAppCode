@@ -1,86 +1,124 @@
 <!DOCTYPE html>
-<meta><meta>
-<html>
-
-<titile class="titlestyle">
-    WELCOME TO THE SERVICE DELIVERY APP FOR THE CITIZENS
-</titile>
-
-<style>
-    .titlestyle{
-      font-weight: bold;
-      font-size: 48px;
-      text-align: center;
-      color: #00ffe7;
-      text-shadow: 0 0 10px #00ffe7;
-    } 
-    
-    .sidebar { 
-      width: 220px; 
-      background-color: #d4e7bf;
-      color: #00ffe7;
-      padding: 20px;
-      box-shadow: 2px 0 10px #00ffe7;
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Service Delivery App</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #fff;
+      color: #333;
     }
 
-    .sidebar h2 {
-      color: #ff00c8;
-      text-shadow: 0 0 5px #ff00c8;
+    /* Header */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 40px;
+      border-bottom: 2px solid #f0f0f0;
     }
-   
-    .sidebar a { 
-      display: block; 
-      margin: 20px 0; 
-      text-decoration: none; 
-      color: #898e8d; 
+
+    header img {
+      height: 40px;
+    }
+
+    nav {
+      display: flex;
+      gap: 20px;
+    }
+
+    nav a {
+      text-decoration: none;
       font-weight: bold;
+      color: #008000;
       transition: 0.3s;
-    } 
-    .Container { 
-      display: flex; 
-      height: 100vh;
-    } 
-    
-    .Context_right{
-      flex: 1; 
-      padding: 40px;
-      background: linear-gradient(145deg, #1a1a2e, #16213e, #0f3460);
-      color: #fff;
     }
-    
 
+    nav a:hover {
+      color: #00cc66;
+    }
 
+    /* Section Title */
+    .section-title {
+      text-align: center;
+      color: #00cc66;
+      font-size: 28px;
+      font-weight: bold;
+      margin: 40px 0 10px;
+    }
 
-</style>
+    /* Challenge Section */
+    .challenge {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 40px;
+      padding: 40px;
+    }
 
+    .challenge img {
+      width: 350px;
+    }
+
+    .challenge-text {
+      max-width: 600px;
+    }
+
+    .challenge-text h2 {
+      color: #00cc66;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .challenge-text p {
+      font-size: 16px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
 <body>
-    <div class="Container">
-       <div class="sidebar">
-         <h2>MENU</h2>
-         <a>href=""</a>
-         <a>href=""</a>
-         <a>href=""</a>
-       </div>
- 
-  
-      <div class="Context_right">
-        <p class="paragra">
-          HELLO THIS APPLIATION WILL ALLOW YOU TO REPORT ALL THE PROLBEMS AROUND RESIDENCE SPACE <
-          e.g portholes, dead streetlights, stop signs, water, electricity and etc
-        </p>
-      </div>
-   </div>
-   
 
+  <!-- HEADER -->
+  <header>
+    <img src="Ministry-DCDT.jpg" alt="GovChat Logo">
+    <nav>
+      <a href="Report_Issues.html">Report Issues</a>
+      <a href="Services.html">Services</a>
+      <a href="Contact.html">Contact</a>
+      <a href="Feedback.html">Feedback</a>
+    </nav>
+  </header>
 
+  <!-- SECTION TITLE -->
+  <h1 class="section-title">MUNICIPAL SERVICE DELIVERY</h1>
 
-
-
-
-
-
-
-
+  <!-- CHALLENGE SECTION -->
+  <div class="challenge">
+    <!-- Chart image -->
+    <img src="OIP.webp" alt="Service Delivery Chart">
+    
+    <!-- Text -->
+    <div class="challenge-text">
+      <h2>CHALLENGE</h2>
+      <p>
+        The Service Delivery is an Application for the citizens who would like to report certain
+        issues in their environment like dead streetlight,potholes,water,electricity and etc.
+        When reported the problem will reach each member in the municipal responsible responsible for maintaining
+        a certain level of service delivery and answering to citizens who have concerns or
+        complaints about day-to-day functionality when it comes to fundamental services
+        such as water, electricity, and sanitation.
+      </p>
+      <p>
+        When there is an overwhelming need for certain services to be attended to, citizens
+        are unable to have their calls answered and voice heard when they try to get through
+        to their particular municipality, leaving them feeling frustrated.
+      </p>
+    </div>
+  </div>
 
 </body>
 </html>
