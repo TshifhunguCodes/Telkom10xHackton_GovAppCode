@@ -67,7 +67,9 @@ label {
 
 /* Inputs */
 input[type="text"],
-input[type="password"] {
+input[type="password"],
+input[type="email"]
+{
   padding: 12px 14px;
   border: none;
   border-radius: 12px;

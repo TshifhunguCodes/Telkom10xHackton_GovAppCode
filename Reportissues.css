@@ -42,25 +42,11 @@ label {
   display: block;
 }
 
-.back-home {
-  margin-top: 15px;
-  text-align: center;
-}
-
-.back-home a {
-  font-size: 14px;
-  color: #4b5563;
-  text-decoration: none;
-}
-
-.back-home a:hover {
-  text-decoration: underline;
-  color: #059669;
-}
-
-/* Inputs */
+/* Inputs (includes email now) */
 input[type="text"],
-input[type="password"] {
+input[type="email"],
+ input[type="password"]
+ {
   width: 100%;
   padding: 12px 14px;
   margin-bottom: 20px;
@@ -111,4 +97,21 @@ button:hover {
 
 .signup-message a:hover {
   text-decoration: underline;
+}
+
+/* Back to home link */
+.back-home {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.back-home a {
+  font-size: 14px;
+  color: #4b5563;
+  text-decoration: none;
+}
+
+.back-home a:hover {
+  text-decoration: underline;
+  color: #059669;
 }
