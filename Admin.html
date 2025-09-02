@@ -2,176 +2,47 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Report Issues - Login</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f8f8f8;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-
-    .container {
-      background: #fff;
-      padding: 40px 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-      width: 350px;
-      text-align: center;
-    }
-
-    h1 {
-      color: #00cc66;
-      margin-bottom: 25px;
-      font-size: 26px;
-      font-weight: bold;
-    }
-
-    .form-group {
-      margin-bottom: 20px;
-      text-align: left;
-    }
-
-    .form-group label {
-      display: block;
-      font-weight: bold;
-      margin-bottom: 8px;
-      color: #333;
-    }
-
-    .form-group input {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 16px;
-      outline: none;
-    }
-
-    .form-group input:focus {
-      border-color: #00cc66;
-      box-shadow: 0 0 6px rgba(0, 204, 102, 0.4);
-    }
-
-    .btn {
-      background: #00cc66;
-      color: #fff;
-      font-size: 18px;
-      font-weight: bold;
-      padding: 12px;
-      width: 100%;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    .btn:hover {
-      background: #00994d;
-    }
-
-    .extra-links {
-      margin-top: 15px;
-      font-size: 14px;
-    }
-
-    .extra-links a {
-      color: #00cc66;
-      text-decoration: none;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .extra-links a:hover {
-      text-decoration: underline;
-    }
-
-    #registerBox {
-      margin-top: 20px;
-      display: none;
-      text-align: left;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create Account</title>
+  <link rel="stylesheet" href="Admin.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
+  <div class="form-wrapper">
+    <div class="login-container">
+      <h2>Create Account</h2>
 
-  <div class="container">
-    <h1>Login</h1>
-    <form id="loginForm">
-      <div class="form-group">
-        <label for="loginUsername">Username</label>
-        <input type="text" id="loginUsername" placeholder="Enter username" required>
-      </div>
-
-      <div class="form-group">
-        <label for="loginPassword">Password</label>
-        <input type="password" id="loginPassword" placeholder="Enter password" required>
-      </div>
-
-      <button type="submit" class="btn">Login</button>
-
-      <div class="extra-links">
-        <p><a onclick="toggleRegister()">Register here</a> | <a href="#">Forgot Password?</a></p>
-      </div>
-    </form>
-
-    <!-- Registration fields hidden initially -->
-    <div id="registerBox">
-      <h2 style="color:#00cc66; font-size:20px;">Register</h2>
-      <form id="registerForm">
-        <div class="form-group">
-          <label for="regID">User ID</label>
-          <input type="text" id="regID" placeholder="Enter your ID" required>
+      <form>
+        <div class="row">
+          <div class="input-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" placeholder="Enter your name" required>
+          </div>
+          <div class="input-group">
+            <label for="surname">Surname</label>
+            <input type="text" id="surname" placeholder="Enter your surname" required>
+          </div>
         </div>
 
-        <div class="form-group">
-          <label for="regPassword">Password</label>
-          <input type="password" id="regPassword" placeholder="Enter password" required>
+        <div class="row">
+          <div class="input-group">
+            <label for="id-number">ID Number</label>
+            <input type="text" id="id-number" placeholder="Enter your ID number" required>
+          </div>
+          <div class="input-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="Create a password" required>
+          </div>
         </div>
 
-        <button type="submit" class="btn">Register</button>
+        <button type="submit">Sign Up</button>
       </form>
+
+      <div class="signup-message">
+        Already have an account? <a href="ReportIssues.html">Sign in</a>
+      </div>
     </div>
   </div>
-
-  <script>
-    function toggleRegister() {
-      let box = document.getElementById("registerBox");
-      box.style.display = (box.style.display === "none") ? "block" : "none";
-    }
-
-    document.getElementById("registerForm").onsubmit = function(e) {
-      e.preventDefault();
-      let id = document.getElementById("regID").value;
-      let pass = document.getElementById("regPassword").value;
-
-      localStorage.setItem("regID", id);
-      localStorage.setItem("regPassword", pass);
-
-      alert("Registration successful! You can now log in.");
-      document.getElementById("registerBox").style.display = "none";
-    }
-
-    document.getElementById("loginForm").onsubmit = function(e) {
-      e.preventDefault();
-      let user = document.getElementById("loginUsername").value;
-      let pass = document.getElementById("loginPassword").value;
-
-      let storedID = localStorage.getItem("regID");
-      let storedPass = localStorage.getItem("regPassword");
-
-      if (user === storedID && pass === storedPass) {
-        alert("Login successful! Redirecting...");
-        window.location.href = "AdminPage.html"; // change this to your admin page
-      } else {
-        alert("Invalid login credentials!");
-      }
-    }
-  </script>
-
 </body>
 </html>
 

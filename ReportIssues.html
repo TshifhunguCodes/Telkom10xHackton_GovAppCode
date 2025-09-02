@@ -1,18 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>
-      Report issues
-    </title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Government Portal Login</title>
+  <link rel="stylesheet" href="Reportissues.css">
 </head>
-
 <body>
-   <P>
-    This page will allow Citizens to report all problems they have whatever.
-   </P>
-  
-   <p>First login using below quick link</p>
 
-    <a href="Admin.html">LOGIN LINK CLICK</a>
+  <div class="login-container">
+    <h2>Government Portal</h2>
+    <form>
+      <label for="id">ID Number</label>
+      <input type="text" id="id" placeholder="Enter your ID number" required />
+
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="Enter your password" required />
+
+      <button type="submit">Login</button>
+    </form>
+
+    <div class="signup-message">
+      Don't have an account? <a href="Admin.html">Sign up</a>
+    </div>
+
+    <div class="back-home">
+      <a href="index.html">← Back to Home Page</a>
+    </div>
+  </div>
+
 </body>
 </html>

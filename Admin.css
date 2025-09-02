@@ -1,0 +1,129 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+/* Light green background fading right-to-left */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(to left, rgba(110, 231, 183, 0.3), rgba(240, 253, 244, 0.95));
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Scrollable wrapper for small screens */
+.form-wrapper {
+  height: 100vh;
+  overflow-y: auto;
+  padding: 20px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Glassmorphism card */
+.login-container {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 40px 30px;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  width: 100%;
+  max-width: 500px;
+}
+
+/* Heading */
+.login-container h2 {
+  text-align: center;
+  font-size: 24px;
+  color: #1a202c;
+  font-weight: 600;
+  margin-bottom: 30px;
+}
+
+/* Two-column layout */
+.row {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+/* Field wrapper */
+.input-group {
+  flex: 1 1 48%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Labels */
+label {
+  font-size: 13px;
+  color: #2d3748;
+  margin-bottom: 6px;
+}
+
+/* Inputs */
+input[type="text"],
+input[type="password"] {
+  padding: 12px 14px;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  background: #f9fafb;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+input:focus {
+  outline: none;
+  background-color: #edf2f7;
+  box-shadow: 0 0 0 2px #38b2ac;
+}
+
+/* Submit Button */
+button {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(90deg, #34d399, #10b981); /* Light to bold green */
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+  margin-top: 10px;
+}
+
+button:hover {
+  background: linear-gradient(90deg, #059669, #047857);
+  transform: translateY(-1px);
+}
+
+/* Bottom text */
+.signup-message {
+  margin-top: 25px;
+  text-align: center;
+  font-size: 13px;
+  color: #2d3748;
+}
+
+.signup-message a {
+  color: #059669;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.signup-message a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive (stack inputs on small screens) */
+@media (max-width: 480px) {
+  .input-group {
+    flex: 1 1 100%;
+  }
+}
