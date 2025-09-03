@@ -9,6 +9,9 @@ const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.querySelector('form');
 
+
+
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -26,6 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     alert('Login successful!');
-    window.location.href = 'dashboard.html'; // ✅ Redirect here
+    window.location.href = "Dashboard.html"; // ✅ Redirect here
   });
 });
