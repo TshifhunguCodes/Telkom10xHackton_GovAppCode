@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Report an Issue</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+  <div class="container" style="display: flex; align-items: center; justify-content: space-between;">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <h1>Government Report</h1>
+    </div>
+    <a href="Login.html" class="btn-outline" style="margin-left:auto;">Back to Login</a>
+  </div>
+  <nav class="hide-print" role="tablist" aria-label="Sections">
+    <a class="tab" aria-selected="true" href="report.html">Report Issue</a>
+  </nav>
+</header>
+  <main class="container">
+    <!-- REPORT FORM -->
+    <section id="report" class="grid grid-2 card" role="tabpanel" aria-labelledby="Report Issue">
+      <div>
+        <h2>Report an Issue</h2>
+        <p class="subtle">Submit a new service delivery issue with photos and location.</p>
+
+        <form id="issueForm">
+          <label for="fullName">Your Name (optional)</label>
+          <input id="fullName" type="text" placeholder="Jane Citizen" />
+
+          <div class="row">
+            <div>
+              <label for="email">Email (optional)</label>
+              <input id="email" type="email" placeholder="name@example.com" />
+            </div>
+            <div>
+              <label for="phone">Phone (optional)</label>
+              <input id="phone" type="tel" placeholder="060 123 4567" />
+            </div>
+          </div>
+
+          <label for="category">Category</label>
+          <select id="category" required>
+            <option value="">Choose…</option>
+            <option>Streetlight</option>
+            <option>Pothole</option>
+            <option>Water</option>
+            <option>Electricity</option>
+            <option>Sanitation</option>
+            <option>Other</option>
+          </select>
+
+          <div class="row">
+            <div>
+              <label for="severity">Severity</label>
+              <select id="severity">
+                <option>Low</option>
+                <option>Medium</option>
+                <option>High</option>
+                <option>Critical</option>
+              </select>
+            </div>
+            <div>
+              <label for="reference">Reference (optional)</label>
+              <input id="reference" type="text" placeholder="e.g., Street/Block, Pole ID, etc." />
+            </div>
+          </div>
+
+          <label for="description">Describe the problem</label>
+          <textarea id="description" placeholder="Explain what's wrong and any useful details…" required></textarea>
+
+          <div class="row">
+            <div>
+              <label for="photo">Add Photo</label>
+              <input id="photo" type="file" accept="image/*" capture="environment" />
+              <div id="photoPreviewWrap" class="subtle" style="margin-top:8px"></div>
+            </div>
+            <div>
+              <label>Location</label>
+              <div class="row">
+                <input id="lat" type="text" inputmode="decimal" placeholder="Latitude" />
+                <input id="lng" type="text" inputmode="decimal" placeholder="Longitude" />
+              </div>
+              <div class="row" style="margin-top:8px">
+                <button type="button" class="btn-outline" id="btnLocate">Use My Location</button>
+                <a id="mapsLink" class="btn-ghost" href="#" target="_blank" rel="noreferrer">Open in Maps</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="footer">
+            <button type="reset" class="btn-outline">Clear</button>
+            <button type="submit">Submit Report</button>
+          </div>
+        </form>
+      </div>
+
+      <aside>
+        <div class="card" style="height:100%">
+          <h2>Tips</h2>
+          <ul>
+            <li>Take clear photos; include a landmark when possible.</li>
+            <li>Allow location to help route to the correct ward / depot.</li>
+            <li>Pick the closest category so the right team sees it first.</li>
+          </ul>
+          <p class="subtle">No data leaves your device in this demo. Use the export button in the dashboard to download a JSON copy for your backend.</p>
+        </div>
+      </aside>
+    </section>
+  </main>
+  <script>
+    // ---------- Utilities ----------
+    const $ = (sel, root = document) => root.querySelector(sel);
+
+    const storeKey = 'civic_reports_v1';
+
+    function loadReports() {
+      try { return JSON.parse(localStorage.getItem(storeKey)) || []; }
+      catch { return []; }
+    }
+    function saveReports(list) {
+      localStorage.setItem(storeKey, JSON.stringify(list));
+    }
+
+    function toDataURL(file, max = 1280) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            const scale = Math.min(1, max / Math.max(img.width, img.height));
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.round(img.width * scale);
+            canvas.height = Math.round(img.height * scale);
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/jpeg', .8));
+          };
+          img.onerror = reject;
+          img.src = reader.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+     
+      });
+    }
