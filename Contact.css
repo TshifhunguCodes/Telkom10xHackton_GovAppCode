@@ -1,3 +1,4 @@
+/* Reset and Base Styles */
 * {
   margin: 0;
   padding: 0;
@@ -6,6 +7,7 @@
 
 body {
   font-family: Arial, sans-serif;
+  background-color: #f2f2f2;
 }
 
 /* Header */
@@ -31,7 +33,7 @@ body {
   margin-left: 30px;
   text-decoration: none;
   font-weight: bold;
-  color: green;
+  color: rgb(0, 138, 0); /* Consistent green */
   font-size: 18px;
 }
 
@@ -41,8 +43,10 @@ body {
   display: flex;
   justify-content: space-between;
   padding: 40px;
+  gap: 30px;
 }
 
+/* Left Side (Map/Image) */
 .left-div {
   width: 50%;
 }
@@ -53,26 +57,31 @@ body {
   border: 2px solid #ccc;
 }
 
+/* Right Side (Text Box) */
 .right-div {
   width: 45%;
-  background-color: #f9f9f9;
+  background-color: white;
   padding: 20px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
+  border-radius: 10px;          /* Rounded edges */
+  border: 1px solid white;      /* White border */
+  /* No shadow */
 }
 
 .right-div h2 {
-  color: green;
-  margin-bottom: 10px;
+  color: rgb(0, 138, 0);         /* Consistent green */
+  margin-bottom: 15px;
+  font-size: 22px;
 }
 
 .right-div p {
+  font-size: 16px;
   line-height: 1.6;
+  color: #333;
 }
 
 /* Footer */
 .footer {
-background: rgb(0, 138, 0);
+  background: rgb(0, 138, 0);     /* Footer green */
   color: #ffffff;
   font-size: 14px;
   padding: 20px 40px;
@@ -110,4 +119,3 @@ background: rgb(0, 138, 0);
   font-size: 13px;
   color: #ccc;
 }
-
