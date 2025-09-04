@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reports Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="container" style="display:flex; justify-content:space-between; align-items:center;">
+    <h1>Reports Dashboard</h1>
+    <a href="report.html" class="btn-outline">New Report</a>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2>Submitted Issues</h2>
+      <table id="reportsTable" border="1" cellpadding="8" cellspacing="0" style="width:100%; border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Category</th>
+            <th>Severity</th>
+            <th>Description</th>
+            <th>Photo</th>
+            <th>Location</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+    const SUPABASE_URL = 'https://cwgidwpxsldxzmknpobq.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3Z2lkd3B4c2xkeHpta25wb2JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY0OTI0ODcsImV4cCI6MjA3MjA2ODQ4N30.Z791cAUdW0i9HB7o7oJrQBtTurIv721RC35kLZfOLdY';
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function loadReports() {
+      const { data, error } = await supabase
+        .from("reports")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching reports:", error.message);
+        return;
+      }
+
+      const tbody = document.querySelector("#reportsTable tbody");
+      tbody.innerHTML = "";
+
+      data.forEach(report => {
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+          <td>${report.name || "-"}</td>
+          <td>${report.email || "-"}</td>
+          <td>${report.category}</td>
+          <td>${report.severity}</td>
+          <td>${report.description}</td>
+          <td>${report.photo_url ? `<a href="${report.photo_url}" target="_blank"><img src="${report.photo_url}" alt="photo" style="max-width:80px; max-height:80px;"></a>` : "-"}</td>
+          <td>${report.latitude && report.longitude 
+              ? `<a href="https://www.google.com/maps?q=${report.latitude},${report.longitude}" target="_blank">View Map</a>` 
+              : "-"}</td>
+          <td>${new Date(report.created_at).toLocaleString()}</td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    loadReports();
+  </script>
+</body>
+</html>
