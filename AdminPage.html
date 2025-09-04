@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Municipal Admin Dashboard (Demo)</title>
+  <title>Municipal Admin Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root{
@@ -20,7 +19,6 @@
     body{
       margin:0; font-family:Arial, Helvetica, sans-serif; display:flex; height:100vh; background:var(--bg);
     }
-    /* Sidebar */
     .sidebar{
       width:250px; background:var(--brand); color:#fff; padding:20px; display:flex; flex-direction:column; gap:10px;
     }
@@ -35,15 +33,12 @@
     .nav-btn.active{ background:#025e4e }
     .spacer{flex:1}
     .footer-note{opacity:.8; font-size:12px; text-align:center}
-    /* Content */
     .content{flex:1; padding:24px; overflow:auto}
     h1{color:var(--brand); margin:0 0 16px}
-    /* Cards / stats */
     .stats{display:grid; grid-template-columns:repeat(4,minmax(160px,1fr)); gap:16px; margin-bottom:20px}
     .card{background:var(--card); border-radius:12px; box-shadow:var(--shadow); padding:16px}
     .card h3{margin:0; font-size:14px; color:#445}
     .card p{margin:6px 0 0; font-size:24px; color:var(--brand); font-weight:700}
-    /* Table styling (from your design) */
     table{
       width:100%; border-collapse:collapse; margin-top:10px; background:#fff; border-radius:8px; overflow:hidden; box-shadow:var(--shadow)
     }
@@ -58,11 +53,9 @@
     }
     .resolve-btn{ background:#28a745; color:#fff }
     .pending-btn{ background:#ffc107; color:#000 }
-    /* Charts layout */
     .charts{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px }
     .chart-box{ background:#fff; border-radius:12px; box-shadow:var(--shadow); padding:16px }
     .muted{ color:#667; font-size:14px }
-    /* Simple toolbar */
     .toolbar{ display:flex; gap:10px; align-items:center; margin-bottom:8px }
     .search{ padding:8px 10px; border:1px solid #dfe; border-radius:8px; width:260px; outline:none }
     @media (max-width:980px){
@@ -83,36 +76,19 @@
     <button class="nav-btn" id="btn-users">👤 Users</button>
     <button class="nav-btn" id="btn-problems">⚠️ Problems</button>
     <div class="spacer"></div>
-    <div class="footer-note">Demo mode (fake data)</div>
+    <div class="footer-note">Live data via Supabase</div>
   </aside>
 
   <!-- Main content -->
   <main class="content" id="content"></main>
 
-  <script>
-    // -----------------------------
-    // DEMO DATA (fake / hard-coded)
-    // -----------------------------
-    const users = [
-      { id: 1, name: "Jane Citizen", email: "jane@example.com", phone: "060 123 4567", ward: "Ward 4", created_at:"2025-09-01" },
-      { id: 2, name: "John Doe", email: "john@example.com", phone: "082 987 6543", ward: "Ward 2", created_at:"2025-09-02" },
-      { id: 3, name: "Lerato M", email: "lerato.m@example.com", phone: "073 555 3322", ward: "Ward 7", created_at:"2025-09-03" },
-      { id: 4, name: "Thabo K", email: "thabo.k@example.com", phone: "079 444 2201", ward: "Ward 1", created_at:"2025-09-03" },
-      { id: 5, name: "Aisha P", email: "aisha.p@example.com", phone: "061 222 1199", ward: "Ward 5", created_at:"2025-09-04" },
-    ];
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-    let problems = [
-      { id:101, citizen_name:"Jane Citizen", email:"jane@example.com", phone:"060 123 4567", category:"Water Leak", severity:"High",
-        description:"Burst pipe on Main Street causing flooding.", latitude:-23.900, longitude:30.100, status:"Pending", reported_at:"2025-09-03" },
-      { id:102, citizen_name:"John Doe", email:"john@example.com", phone:"082 987 6543", category:"Electricity Outage", severity:"Medium",
-        description:"Power outage since yesterday in Block C.", latitude:-23.910, longitude:30.200, status:"Resolved", reported_at:"2025-09-02" },
-      { id:103, citizen_name:"Lerato M", email:"lerato.m@example.com", phone:"073 555 3322", category:"Pothole", severity:"Low",
-        description:"Large pothole near Clinic Road.", latitude:-23.905, longitude:30.150, status:"Pending", reported_at:"2025-09-02" },
-      { id:104, citizen_name:"Thabo K", email:"thabo.k@example.com", phone:"079 444 2201", category:"Illegal Dumping", severity:"Medium",
-        description:"Rubbish dumped behind the school.", latitude:-23.920, longitude:30.130, status:"Pending", reported_at:"2025-09-01" },
-      { id:105, citizen_name:"Aisha P", email:"aisha.p@example.com", phone:"061 222 1199", category:"Streetlight Out", severity:"High",
-        description:"Two streetlights not working on Oak Ave.", latitude:-23.915, longitude:30.180, status:"Resolved", reported_at:"2025-09-04" },
-    ];
+    const SUPABASE_URL = 'https://cwgidwpxsldxzmknpobq.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3Z2lkd3B4c2xkeHpta25wb2JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY0OTI0ODcsImV4cCI6MjA3MjA2ODQ4N30.Z791cAUdW0i9HB7o7oJrQBtTurIv721RC35kLZfOLdY';
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // UI state
     let currentSection = "dashboard";
@@ -142,20 +118,24 @@
     }
 
     // -----------------------------
-    // DASHBOARD (FAKE CHARTS)
+    // DASHBOARD (LIVE DATA)
     // -----------------------------
-    function renderDashboard(){
-      // aggregate demo stats
+    async function renderDashboard(){
+      // Fetch users and problems from Supabase
+      const { data: users = [], error: userErr } = await supabase.from("users").select("*");
+      const { data: problems = [], error: probErr } = await supabase.from("reports").select("*");
+
+      // aggregate stats
       const totalUsers = users.length;
       const totalProblems = problems.length;
       const pending = problems.filter(p=>p.status==="Pending").length;
       const resolved = problems.filter(p=>p.status==="Resolved").length;
 
       // severity counts
-      const sev = { Low:0, Medium:0, High:0 };
+      const sev = { Low:0, Medium:0, High:0, Critical:0 };
       problems.forEach(p => { if(sev[p.severity]!==undefined) sev[p.severity]++; });
 
-      // category counts (top few)
+      // category counts
       const catMap = {};
       problems.forEach(p => { catMap[p.category] = (catMap[p.category]||0)+1; });
       const categories = Object.keys(catMap);
@@ -190,7 +170,7 @@
         </div>
       `;
 
-      // Destroy previous charts if any (avoid overlay)
+      // Destroy previous charts if any
       if(statusChart) statusChart.destroy();
       if(severityChart) severityChart.destroy();
       if(window.categoryChart) window.categoryChart.destroy();
@@ -211,13 +191,13 @@
       severityChart = new Chart(ctxSev, {
         type: "bar",
         data: {
-          labels:["Low","Medium","High"],
-          datasets:[{ label:"Count", data:[sev.Low, sev.Medium, sev.High] }]
+          labels:Object.keys(sev),
+          datasets:[{ label:"Count", data:Object.values(sev) }]
         },
         options:{ plugins:{ legend:{ display:false }}, responsive:true }
       });
 
-      // Bar: Categories (fake from demo)
+      // Bar: Categories
       const ctxCat = document.getElementById("categoryBar").getContext("2d");
       window.categoryChart = new Chart(ctxCat, {
         type: "bar",
@@ -225,7 +205,7 @@
         options:{ plugins:{ legend:{ display:false }}, responsive:true }
       });
 
-      // Bar: Users by Ward (fake grouping from demo users)
+      // Bar: Users by Ward
       const wardCounts = {};
       users.forEach(u => { wardCounts[u.ward] = (wardCounts[u.ward]||0)+1; });
       const wardLabels = Object.keys(wardCounts);
@@ -240,9 +220,10 @@
     }
 
     // -----------------------------
-    // USERS (DEMO TABLE)
+    // USERS (LIVE TABLE)
     // -----------------------------
-    function renderUsers(){
+    async function renderUsers(){
+      const { data: users = [], error } = await supabase.from("users").select("*");
       const rows = users.map(u => `
         <tr>
           <td>${u.id}</td>
@@ -250,7 +231,7 @@
           <td>${u.email}</td>
           <td>${u.phone}</td>
           <td>${u.ward}</td>
-          <td>${u.created_at}</td>
+          <td>${u.created_at ? new Date(u.created_at).toLocaleDateString() : ""}</td>
         </tr>
       `).join("");
 
@@ -274,7 +255,8 @@
       input.oninput = () => {
         const q = input.value.toLowerCase();
         const filtered = users.filter(u =>
-          u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q)
+          (u.name && u.name.toLowerCase().includes(q)) ||
+          (u.email && u.email.toLowerCase().includes(q))
         );
         document.getElementById("usersBody").innerHTML = filtered.map(u => `
           <tr>
@@ -283,31 +265,32 @@
             <td>${u.email}</td>
             <td>${u.phone}</td>
             <td>${u.ward}</td>
-            <td>${u.created_at}</td>
+            <td>${u.created_at ? new Date(u.created_at).toLocaleDateString() : ""}</td>
           </tr>
         `).join("");
       };
     }
 
     // -----------------------------
-    // PROBLEMS (DEMO TABLE, YOUR STYLE)
+    // PROBLEMS (LIVE TABLE)
     // -----------------------------
-    function renderProblems(){
+    async function renderProblems(){
+      const { data: problems = [], error } = await supabase.from("reports").select("*").order("created_at", { ascending: false });
       const rows = problems.map(p => `
-        <tr>
+        <tr data-id="${p.id}">
           <td>
-            <strong>${p.citizen_name}</strong><br/>
-            ${p.email}<br/>
-            ${p.phone}
+            <strong>${p.name || "-"}</strong><br/>
+            ${p.email || "-"}<br/>
+            ${p.phone || "-"}
           </td>
-          <td>${p.category}</td>
-          <td>${p.severity}</td>
-          <td>${p.description}</td>
-          <td>${p.latitude.toFixed(3)}, ${p.longitude.toFixed(3)}</td>
-          <td><span class="status ${p.status.toLowerCase()}">${p.status}</span></td>
+          <td>${p.category || "-"}</td>
+          <td>${p.severity || "-"}</td>
+          <td>${p.description || "-"}</td>
+          <td>${p.latitude && p.longitude ? `${p.latitude.toFixed(3)}, ${p.longitude.toFixed(3)}` : "-"}</td>
+          <td><span class="status ${p.status && p.status.toLowerCase()}">${p.status || "-"}</span></td>
           <td class="actions">
-            <button class="resolve-btn" onclick="updateStatus(${p.id}, 'Resolved')">Resolve</button>
-            <button class="pending-btn" onclick="updateStatus(${p.id}, 'Pending')">Pending</button>
+            <button class="resolve-btn" onclick="window.updateStatus(${p.id}, 'Resolved')">Resolve</button>
+            <button class="pending-btn" onclick="window.updateStatus(${p.id}, 'Pending')">Pending</button>
           </td>
         </tr>
       `).join("");
@@ -333,42 +316,59 @@
         </table>
       `;
 
+      // Attach event listeners to action buttons
+      setTimeout(() => {
+        document.querySelectorAll('.resolve-btn').forEach(btn => {
+          btn.addEventListener('click', async function() {
+            const id = this.closest('tr').dataset.id;
+            await updateStatus(id, 'Resolved');
+          });
+        });
+        document.querySelectorAll('.pending-btn').forEach(btn => {
+          btn.addEventListener('click', async function() {
+            const id = this.closest('tr').dataset.id;
+            await updateStatus(id, 'Pending');
+          });
+        });
+      }, 0);
+
       // quick filter
       const input = document.getElementById("probSearch");
       input.oninput = () => {
         const q = input.value.toLowerCase();
         const filtered = problems.filter(p =>
-          (p.citizen_name.toLowerCase().includes(q)) ||
-          (p.category.toLowerCase().includes(q)) ||
-          (p.status.toLowerCase().includes(q))
+          (p.name && p.name.toLowerCase().includes(q)) ||
+          (p.category && p.category.toLowerCase().includes(q)) ||
+          (p.status && p.status.toLowerCase().includes(q))
         );
         document.getElementById("problemsBody").innerHTML = filtered.map(p => `
           <tr>
             <td>
-              <strong>${p.citizen_name}</strong><br/>
-              ${p.email}<br/>
-              ${p.phone}
+              <strong>${p.name || "-"}</strong><br/>
+              ${p.email || "-"}<br/>
+              ${p.phone || "-"}
             </td>
-            <td>${p.category}</td>
-            <td>${p.severity}</td>
-            <td>${p.description}</td>
-            <td>${p.latitude.toFixed(3)}, ${p.longitude.toFixed(3)}</td>
-            <td><span class="status ${p.status.toLowerCase()}">${p.status}</span></td>
+            <td>${p.category || "-"}</td>
+            <td>${p.severity || "-"}</td>
+            <td>${p.description || "-"}</td>
+            <td>${p.latitude && p.longitude ? `${p.latitude.toFixed(3)}, ${p.longitude.toFixed(3)}` : "-"}</td>
+            <td><span class="status ${p.status && p.status.toLowerCase()}">${p.status || "-"}</span></td>
             <td class="actions">
-              <button class="resolve-btn" onclick="updateStatus(${p.id}, 'Resolved')">Resolve</button>
-              <button class="pending-btn" onclick="updateStatus(${p.id}, 'Pending')">Pending</button>
+              <button class="resolve-btn" onclick="window.updateStatus(${p.id}, 'Resolved')">Resolve</button>
+              <button class="pending-btn" onclick="window.updateStatus(${p.id}, 'Pending')">Pending</button>
             </td>
           </tr>
         `).join("");
       };
     }
 
-    // Local-only status update (demo)
-    function updateStatus(id, newStatus){
-      problems = problems.map(p => p.id === id ? { ...p, status:newStatus } : p);
+    // Status update (live)
+    window.updateStatus = async function(id, newStatus){
+      const { error } = await supabase.from("reports").update({ status: newStatus }).eq("id", id);
+      if(error) alert("Error updating status: " + error.message);
       if(currentSection === "problems") renderProblems();
       if(currentSection === "dashboard") renderDashboard();
-    }
+    };
 
     // boot
     setSection("dashboard");

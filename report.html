@@ -180,10 +180,21 @@ form.addEventListener("submit", async (e) => {
     photoUrl = await uploadPhoto(file);
   }
 
-  const report = {
+  // Prepare user info
+  const user = {
     name: document.getElementById("fullName").value,
     email: document.getElementById("email").value,
     phone: document.getElementById("phone").value,
+    ward: "1" // or fetch from another input if available
+  };
+
+  // Insert user info (if not already present)
+  // You may want to check for duplicates by email or phone
+  await supabase.from("users").insert([user]);
+
+  // Prepare report info
+  const report = {
+    ...user,
     category: document.getElementById("category").value,
     severity: document.getElementById("severity").value,
     reference: document.getElementById("reference").value,
