@@ -110,39 +110,99 @@
       </aside>
     </section>
   </main>
-  <script>
-    // ---------- Utilities ----------
-    const $ = (sel, root = document) => root.querySelector(sel);
+  <script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-    const storeKey = 'civic_reports_v1';
+const SUPABASE_URL = 'https://cwgidwpxsldxzmknpobq.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3Z2lkd3B4c2xkeHpta25wb2JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY0OTI0ODcsImV4cCI6MjA3MjA2ODQ4N30.Z791cAUdW0i9HB7o7oJrQBtTurIv721RC35kLZfOLdY';
 
-    function loadReports() {
-      try { return JSON.parse(localStorage.getItem(storeKey)) || []; }
-      catch { return []; }
-    }
-    function saveReports(list) {
-      localStorage.setItem(storeKey, JSON.stringify(list));
-    }
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    function toDataURL(file, max = 1280) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const img = new Image();
-          img.onload = () => {
-            const scale = Math.min(1, max / Math.max(img.width, img.height));
-            const canvas = document.createElement('canvas');
-            canvas.width = Math.round(img.width * scale);
-            canvas.height = Math.round(img.height * scale);
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            resolve(canvas.toDataURL('image/jpeg', .8));
-          };
-          img.onerror = reject;
-          img.src = reader.result;
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-     
-      });
-    }
+const form = document.getElementById("issueForm");
+const photoInput = document.getElementById("photo");
+const latInput = document.getElementById("lat");
+const lngInput = document.getElementById("lng");
+const mapsLink = document.getElementById("mapsLink");
+const btnLocate = document.getElementById("btnLocate");
+
+// --- LOCATION FEATURE ---
+btnLocate.addEventListener("click", () => {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition((pos) => {
+      latInput.value = pos.coords.latitude.toFixed(6);
+      lngInput.value = pos.coords.longitude.toFixed(6);
+      mapsLink.href = `https://www.google.com/maps?q=${latInput.value},${lngInput.value}`;
+    });
+  } else {
+    alert("Geolocation not supported.");
+  }
+});
+
+latInput.addEventListener("input", updateMapLink);
+lngInput.addEventListener("input", updateMapLink);
+
+function updateMapLink() {
+  if (latInput.value && lngInput.value) {
+    mapsLink.href = `https://www.google.com/maps?q=${latInput.value},${lngInput.value}`;
+  }
+}
+
+// --- PHOTO UPLOAD FUNCTION ---
+async function uploadPhoto(file) {
+  if (!file) return null;
+
+  const fileName = `${Date.now()}-${file.name}`;
+  const { data, error } = await supabase.storage
+    .from("report-photos")
+    .upload(fileName, file);
+
+  if (error) {
+    console.error("Photo upload error:", error.message);
+    return null;
+  }
+
+  // Get public URL
+  const { data: publicUrlData } = supabase.storage
+    .from("report-photos")
+    .getPublicUrl(fileName);
+
+  return publicUrlData.publicUrl;
+}
+
+// --- FORM SUBMIT HANDLER ---
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const file = photoInput.files[0];
+  let photoUrl = null;
+
+  if (file) {
+    photoUrl = await uploadPhoto(file);
+  }
+
+  const report = {
+    name: document.getElementById("fullName").value,
+    email: document.getElementById("email").value,
+    phone: document.getElementById("phone").value,
+    category: document.getElementById("category").value,
+    severity: document.getElementById("severity").value,
+    reference: document.getElementById("reference").value,
+    description: document.getElementById("description").value,
+    latitude: latInput.value ? parseFloat(latInput.value) : null,
+    longitude: lngInput.value ? parseFloat(lngInput.value) : null,
+    photo_url: photoUrl,
+  };
+
+  const { data, error } = await supabase
+    .from("reports")
+    .insert([report]);
+
+  if (error) {
+    alert("Error saving report: " + error.message);
+  } else {
+    alert("Report submitted successfully!");
+    form.reset();
+    mapsLink.href = "#";
+  }
+});
+</script>
