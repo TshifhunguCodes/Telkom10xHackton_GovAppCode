@@ -1,15 +1,145 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
- <meta>
- <title>
-    Feedback Page
-  </title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Service Delivery Feedback</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #fff;
+      color: #333;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 40px;
+      border-bottom: 2px solid #f0f0f0;
+    }
+
+    /* Clickable Logo */
+    header a.logo {
+      display: inline-block;
+    }
+
+    header a.logo img {
+      height: 40px;
+    }
+
+    nav {
+      display: flex;
+      gap: 20px;
+    }
+
+    nav a {
+      text-decoration: none;
+      font-weight: bold;
+      color: #008000;
+      transition: 0.3s;
+    }
+
+    nav a:hover {
+      color: #00cc66;
+    }
+
+    /* Section Title */
+    .section-title {
+      text-align: center;
+      color: #00cc66;
+      font-size: 28px;
+      font-weight: bold;
+      margin: 40px 0 20px;
+    }
+
+    /* Feedback Form */
+    main {
+      max-width: 800px;
+      margin: 0 auto 40px;
+      padding: 20px 40px;
+      background-color: #f9f9f9;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    main p {
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    form label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #008000;
+    }
+
+    form input, form textarea, form select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 20px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    form button {
+      background-color: #008000;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    form button:hover {
+      background-color: #00cc66;
+    }
+  </style>
 </head>
 <body>
 
-    
+  <!-- HEADER -->
+  <header>
+    <a href="index.html" class="logo">
+      <img src="pictures/Ministry-DCDT.jpg" alt="Gov Logo">
+    </a>
+    <nav>
+      <a href="Login.html">Report Issues</a>
+      <a href="Services.html">Services</a>
+      <a href="Contact.html">Contact</a>
+      <a href="Feedback.html">Feedback</a>
+    </nav>
+  </header>
+
+  <!-- SECTION TITLE -->
+  <h1 class="section-title">SERVICE DELIVERY FEEDBACK</h1>
+
+  <!-- FEEDBACK FORM -->
+  <main>
+    <p>
+      Please use this form to provide feedback about municipal services, Your feedback will be forwarded to the responsible municipal members for action.
+    </p>
+
+    <form action="#" method="post">
+      <label for="name">Your Name</label>
+      <input type="text" id="name" name="name" placeholder="Enter your name" required>
+
+      <label for="email">Email Address</label>
+      <input type="email" id="email" name="email" placeholder="Enter your email" required>
+
+  
+
+      <label for="message">Feedback / Complaint</label>
+      <textarea id="message" name="message" rows="5" placeholder="Describe your issue or feedback" required></textarea>
+
+      <button type="submit">Submit Feedback</button>
+    </form>
+  </main>
+
 </body>
-
-
 </html>
