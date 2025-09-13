@@ -108,7 +108,7 @@
     <div class="brand">Municipal Admin</div>
     <button class="nav-btn active" id="btn-dashboard">📊 Dashboard</button>
     <button class="nav-btn" id="btn-users">👤 Users</button>
-    <button class="nav-btn" id="btn-problems">⚠️ Problems</button>
+    <button class="nav-btn" id="btn-problems">⚠ Problems</button>
     <div class="spacer"></div>
     <div class="footer-note">Live data via Supabase</div>
   </aside>
@@ -155,21 +155,17 @@
     // DASHBOARD (LIVE DATA)
     // -----------------------------
     async function renderDashboard(){
-      // Fetch users and problems from Supabase
-      const { data: users = [], error: userErr } = await supabase.from("users").select("*");
-      const { data: problems = [], error: probErr } = await supabase.from("reports").select("*");
+      const { data: users = [] } = await supabase.from("users").select("*");
+      const { data: problems = [] } = await supabase.from("reports").select("*");
 
-      // aggregate stats
       const totalUsers = users.length;
       const totalProblems = problems.length;
       const pending = problems.filter(p=>p.status==="Pending").length;
       const resolved = problems.filter(p=>p.status==="Resolved").length;
 
-      // severity counts
       const sev = { Low:0, Medium:0, High:0, Critical:0 };
       problems.forEach(p => { if(sev[p.severity]!==undefined) sev[p.severity]++; });
 
-      // category counts
       const catMap = {};
       problems.forEach(p => { catMap[p.category] = (catMap[p.category]||0)+1; });
       const categories = Object.keys(catMap);
@@ -204,34 +200,24 @@
         </div>
       `;
 
-      // Destroy previous charts if any
       if(statusChart) statusChart.destroy();
       if(severityChart) severityChart.destroy();
       if(window.categoryChart) window.categoryChart.destroy();
       if(window.wardChart) window.wardChart.destroy();
 
-      // Pie: Status
       const ctxStatus = document.getElementById("statusPie").getContext("2d");
       statusChart = new Chart(ctxStatus, {
         type: "pie",
-        data: {
-          labels:["Pending","Resolved"],
-          datasets:[{ data:[pending,resolved] }]
-        }
+        data: { labels:["Pending","Resolved"], datasets:[{ data:[pending,resolved] }] }
       });
 
-      // Bar: Severity
       const ctxSev = document.getElementById("severityBar").getContext("2d");
       severityChart = new Chart(ctxSev, {
         type: "bar",
-        data: {
-          labels:Object.keys(sev),
-          datasets:[{ label:"Count", data:Object.values(sev) }]
-        },
+        data: { labels:Object.keys(sev), datasets:[{ label:"Count", data:Object.values(sev) }]},
         options:{ plugins:{ legend:{ display:false }}, responsive:true }
       });
 
-      // Bar: Categories
       const ctxCat = document.getElementById("categoryBar").getContext("2d");
       window.categoryChart = new Chart(ctxCat, {
         type: "bar",
@@ -239,7 +225,6 @@
         options:{ plugins:{ legend:{ display:false }}, responsive:true }
       });
 
-      // Bar: Users by Ward
       const wardCounts = {};
       users.forEach(u => { wardCounts[u.ward] = (wardCounts[u.ward]||0)+1; });
       const wardLabels = Object.keys(wardCounts);
@@ -257,7 +242,7 @@
     // USERS (LIVE TABLE)
     // -----------------------------
     async function renderUsers(){
-      const { data: users = [], error } = await supabase.from("users").select("*");
+      const { data: users = [] } = await supabase.from("users").select("*");
       const rows = users.map(u => `
         <tr>
           <td>${u.id}</td>
@@ -284,14 +269,13 @@
         </table>
       `;
 
-      // simple client search
       const input = document.getElementById("userSearch");
       input.oninput = () => {
         const q = input.value.toLowerCase();
         const filtered = users.filter(u =>
           (u.name && u.name.toLowerCase().includes(q)) ||
           (u.email && u.email.toLowerCase().includes(q))
-        );
+        )
         document.getElementById("usersBody").innerHTML = filtered.map(u => `
           <tr>
             <td>${u.id}</td>
@@ -321,26 +305,23 @@
 
     async function renderProblems(){
       const { data: problems = [], error } = await supabase.from("reports").select("*").order("created_at", { ascending: false });
-
-      const cards = problems.map((p, idx) => `
-        <div class="problem-card">
-          <div class="card-img">
-            <img src="${p.photo_url ? p.photo_url : getDemoPhoto(idx)}" alt="User Photo" width="120" height="120" style="border-radius:10px;object-fit:cover;" />
-          </div>
-          <div class="card-info">
-            <div><strong>${p.name || "-"}</strong></div>
-            <div class="muted">${p.email || "-"} | ${p.phone || "-"}</div>
-            <div><b>Category:</b> ${p.category || "-"}</div>
-            <div><b>Severity:</b> ${p.severity || "-"}</div>
-            <div><b>Description:</b> ${p.description || "-"}</div>
-            <div><b>Location:</b> ${p.latitude && p.longitude ? `${p.latitude.toFixed(3)}, ${p.longitude.toFixed(3)}` : "-"}</div>
-            <div><span class="status ${p.status && p.status.toLowerCase()}">${p.status || "-"}</span></div>
-            <div class="actions" style="margin-top:10px;">
-              <button class="resolve-btn">Resolve</button>
-              <button class="pending-btn">Pending</button>
-            </div>
-          </div>
-        </div>
+      const rows = problems.map(p => `
+        <tr data-id="${p.id}">
+          <td>
+            <strong>${p.name || "-"}</strong><br/>
+            ${p.email || "-"}<br/>
+            ${p.phone || "-"}
+          </td>
+          <td>${p.category || "-"}</td>
+          <td>${p.severity || "-"}</td>
+          <td>${p.description || "-"}</td>
+          <td>${p.latitude && p.longitude ? `${p.latitude.toFixed(3)}, ${p.longitude.toFixed(3)}` : "-"}</td>
+          <td><span class="status ${p.status && p.status.toLowerCase()}">${p.status || "-"}</span></td>
+          <td class="actions">
+            <button class="resolve-btn" onclick="window.updateStatus(${p.id}, 'Resolved')">Resolve</button>
+            <button class="pending-btn" onclick="window.updateStatus(${p.id}, 'Pending')">Pending</button>
+          </td>
+        </tr>
       `).join("");
 
       content.innerHTML = `
@@ -353,15 +334,15 @@
 
       // Attach event listeners to action buttons
       setTimeout(() => {
-        document.querySelectorAll('.resolve-btn').forEach((btn, idx) => {
+        document.querySelectorAll('.resolve-btn').forEach(btn => {
           btn.addEventListener('click', async function() {
-            const id = problems[idx].id;
+            const id = this.closest('tr').dataset.id;
             await updateStatus(id, 'Resolved');
           });
         });
-        document.querySelectorAll('.pending-btn').forEach((btn, idx) => {
+        document.querySelectorAll('.pending-btn').forEach(btn => {
           btn.addEventListener('click', async function() {
-            const id = problems[idx].id;
+            const id = this.closest('tr').dataset.id;
             await updateStatus(id, 'Pending');
           });
         });
@@ -376,36 +357,34 @@
           (p.category && p.category.toLowerCase().includes(q)) ||
           (p.status && p.status.toLowerCase().includes(q))
         );
-        document.querySelector(".problem-card-list").innerHTML = filtered.map(p => `
-          <div class="problem-card">
-            <div class="card-img">
-              <img src="${p.photo_url ? p.photo_url : getDemoPhoto(idx)}" alt="User Photo" width="120" height="120" style="border-radius:10px;object-fit:cover;" />
-            </div>
-            <div class="card-info">
-              <div><strong>${p.name || "-"}</strong></div>
-              <div class="muted">${p.email || "-"} | ${p.phone || "-"}</div>
-              <div><b>Category:</b> ${p.category || "-"}</div>
-              <div><b>Severity:</b> ${p.severity || "-"}</div>
-              <div><b>Description:</b> ${p.description || "-"}</div>
-              <div><b>Location:</b> ${p.latitude && p.longitude ? `${p.latitude.toFixed(3)}, ${p.longitude.toFixed(3)}` : "-"}</div>
-              <div><span class="status ${p.status && p.status.toLowerCase()}">${p.status || "-"}</span></div>
-              <div class="actions" style="margin-top:10px;">
-                <button class="resolve-btn">Resolve</button>
-                <button class="pending-btn">Pending</button>
-              </div>
-            </div>
-          </div>
+        document.getElementById("problemsBody").innerHTML = filtered.map(p => `
+          <tr>
+            <td>
+              <strong>${p.name || "-"}</strong><br/>
+              ${p.email || "-"}<br/>
+              ${p.phone || "-"}
+            </td>
+            <td>${p.category || "-"}</td>
+            <td>${p.severity || "-"}</td>
+            <td>${p.description || "-"}</td>
+            <td>${p.latitude && p.longitude ? `${p.latitude.toFixed(3)}, ${p.longitude.toFixed(3)}` : "-"}</td>
+            <td><span class="status ${p.status && p.status.toLowerCase()}">${p.status || "-"}</span></td>
+            <td class="actions">
+              <button class="resolve-btn" onclick="window.updateStatus(${p.id}, 'Resolved')">Resolve</button>
+              <button class="pending-btn" onclick="window.updateStatus(${p.id}, 'Pending')">Pending</button>
+            </td>
+          </tr>
         `).join("");
       };
     }
 
-    // Status update (live)
-    window.updateStatus = async function(id, newStatus){
+    // Status update
+    async function updateStatus(id, newStatus){
       const { error } = await supabase.from("reports").update({ status: newStatus }).eq("id", id);
       if(error) alert("Error updating status: " + error.message);
       if(currentSection === "problems") renderProblems();
       if(currentSection === "dashboard") renderDashboard();
-    };
+    }
 
     // boot
     setSection("dashboard");
