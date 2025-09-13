@@ -8,24 +8,19 @@
 </head>
 <body>
   <header>
-  <div class="container" style="display: flex; align-items: center; justify-content: space-between;">
-    <div class="brand">
-      <div class="logo" aria-hidden="true"></div>
-      <h1>Government Report</h1>
+    <div class="container" style="display: flex; align-items: center; justify-content: space-between;">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <h1>Government Report</h1>
+      </div>
+      <a href="Login.html" class="btn-outline" style="margin-left:auto;">Back to Login</a>
     </div>
-    <a href="Login.html" class="btn-outline" style="margin-left:auto;">Back to Login</a>
-  </div>
-  <nav class="hide-print" role="tablist" aria-label="Sections">
-    <a class="tab" aria-selected="true" href="Services.html">Services</a>
-  </nav>
-</header>
+  </header>
   <main class="container">
-    <!-- REPORT FORM -->
     <section id="report" class="grid grid-2 card" role="tabpanel" aria-labelledby="Report Issue">
       <div>
         <h2>Report an Issue</h2>
         <p class="subtle">Submit a new service delivery issue with photos and location.</p>
-
         <form id="issueForm">
           <label for="fullName">Your Name (optional)</label>
           <input id="fullName" type="text" placeholder="Jane Citizen" />
@@ -84,8 +79,8 @@
                 <input id="lng" type="text" inputmode="decimal" placeholder="Longitude" />
               </div>
               <div class="row" style="margin-top:8px">
-                <button type="button" class="btn-outline" id="btnLocate">Use My Location</button>
-                <a id="mapsLink" class="btn-ghost" href="#" target="_blank" rel="noreferrer">Open in Maps</a>
+                <button type="button" class="btn-outline" id="btnPickLocation">Pick Location on Map</button>
+                <span class="subtle" style="margin-left:8px;">Drop a pin on Google Maps, copy coordinates, and paste here.</span>
               </div>
             </div>
           </div>
@@ -96,16 +91,14 @@
           </div>
         </form>
       </div>
-
       <aside>
         <div class="card" style="height:100%">
           <h2>Tips</h2>
           <ul>
             <li>Take clear photos; include a landmark when possible.</li>
-            <li>Allow location to help route to the correct ward / depot.</li>
             <li>Pick the closest category so the right team sees it first.</li>
+            <li>Drop a pin on Google Maps for accurate location.</li>
           </ul>
-          <p class="subtle">No data leaves your device in this demo. Use the export button in the dashboard to download a JSON copy for your backend.</p>
         </div>
       </aside>
     </section>
@@ -122,50 +115,44 @@ const form = document.getElementById("issueForm");
 const photoInput = document.getElementById("photo");
 const latInput = document.getElementById("lat");
 const lngInput = document.getElementById("lng");
-const mapsLink = document.getElementById("mapsLink");
-const btnLocate = document.getElementById("btnLocate");
+const photoPreviewWrap = document.getElementById("photoPreviewWrap");
+const btnPickLocation = document.getElementById("btnPickLocation");
 
-// --- LOCATION FEATURE ---
-btnLocate.addEventListener("click", () => {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition((pos) => {
-      latInput.value = pos.coords.latitude.toFixed(6);
-      lngInput.value = pos.coords.longitude.toFixed(6);
-      mapsLink.href = `https://www.google.com/maps?q=${latInput.value},${lngInput.value}`;
-    });
-  } else {
-    alert("Geolocation not supported.");
-  }
+// --- PHOTO PREVIEW ---
+photoInput.addEventListener("change", async () => {
+  photoPreviewWrap.innerHTML = "";
+  const file = photoInput.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.src = reader.result;
+    img.className = "thumb";
+    img.alt = "Selected photo preview";
+    photoPreviewWrap.appendChild(img);
+  };
+  reader.readAsDataURL(file);
 });
 
-latInput.addEventListener("input", updateMapLink);
-lngInput.addEventListener("input", updateMapLink);
-
-function updateMapLink() {
-  if (latInput.value && lngInput.value) {
-    mapsLink.href = `https://www.google.com/maps?q=${latInput.value},${lngInput.value}`;
-  }
-}
+// --- PICK LOCATION BUTTON ---
+btnPickLocation.addEventListener("click", () => {
+  window.open("https://www.google.com/maps", "_blank");
+});
 
 // --- PHOTO UPLOAD FUNCTION ---
 async function uploadPhoto(file) {
   if (!file) return null;
-
   const fileName = `${Date.now()}-${file.name}`;
   const { data, error } = await supabase.storage
     .from("report-photos")
     .upload(fileName, file);
-
   if (error) {
     console.error("Photo upload error:", error.message);
     return null;
   }
-
-  // Get public URL
   const { data: publicUrlData } = supabase.storage
     .from("report-photos")
     .getPublicUrl(fileName);
-
   return publicUrlData.publicUrl;
 }
 
@@ -175,7 +162,6 @@ form.addEventListener("submit", async (e) => {
 
   const file = photoInput.files[0];
   let photoUrl = null;
-
   if (file) {
     photoUrl = await uploadPhoto(file);
   }
@@ -185,11 +171,10 @@ form.addEventListener("submit", async (e) => {
     name: document.getElementById("fullName").value,
     email: document.getElementById("email").value,
     phone: document.getElementById("phone").value,
-    ward: "1" // or fetch from another input if available
+    ward: "1"
   };
 
-  // Insert user info (if not already present)
-  // You may want to check for duplicates by email or phone
+  // Insert user info (no duplicate check for simplicity)
   await supabase.from("users").insert([user]);
 
   // Prepare report info
@@ -204,16 +189,15 @@ form.addEventListener("submit", async (e) => {
     photo_url: photoUrl,
   };
 
-  const { data, error } = await supabase
-    .from("reports")
-    .insert([report]);
-
+  const { error } = await supabase.from("reports").insert([report]);
   if (error) {
     alert("Error saving report: " + error.message);
   } else {
     alert("Report submitted successfully!");
     form.reset();
-    mapsLink.href = "#";
+    photoPreviewWrap.innerHTML = "";
   }
 });
 </script>
+</body>
+</html>
