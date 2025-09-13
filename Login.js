@@ -29,6 +29,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     alert('Login successful!');
-    window.location.href = "report.html"; // ✅ Redirect here
+    window.location.href = "report.html"; 
+    
+    // ✅ Redirect here
   });
 });

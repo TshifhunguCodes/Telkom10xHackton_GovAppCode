@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>User Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+
+
+
+    .user-info-card {
+      background: #f7fafc;
+      border-radius: 10px;
+      padding: 18px;
+      margin-bottom: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      font-size: 16px;
+    }
+    .report-list {
+      display: grid;
+      gap: 18px;
+      margin-top: 12px;
+    }
+    .report-card {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      padding: 14px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .report-photo {
+      flex: 0 0 90px;
+      width: 90px;
+      height: 90px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: #eee;
+      margin-right: 8px;
+    }
+    .report-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 15px;
+    }
+    .status {
+      font-weight: bold;
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-size: 13px;
+      display: inline-block;
+    }
+    .status.pending { background: #fff3cd; color: #856404; }
+    .status.resolved { background: #d4edda; color: #155724; }
+    @media (max-width: 600px) {
+      .report-card { flex-direction: column; align-items: stretch; }
+      .report-photo { margin-right: 0; margin-bottom: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container" style="display: flex; align-items: center; justify-content: space-between;">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <h1>User Dashboard</h1>
+      </div>
+      <a href="report.html" class="btn-outline">Back to Report</a>
+    </div>
+  </header>
+  <main class="container">
+    <section class="card" style="width:70%;margin:auto;">
+      <h2>Your Info & Report Status</h2>
+      <form id="userLookupForm" style="margin-bottom:16px;">
+
+
+
+        <label for="lookupEmail">Enter your email:</label>
+        <input id="lookupEmail" type="email" required placeholder="name@example.com" />
+        <button type="submit" class="btn-outline">Show My Dashboard</button>
+      </form>
+      <div id="userInfo"></div>
+      <div id="userReports"></div>
+    </section>
+  </main>
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+    const SUPABASE_URL = 'https://cwgidwpxsldxzmknpobq.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3Z2lkd3B4c2xkeHpta25wb2JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY0OTI0ODcsImV4cCI6MjA3MjA2ODQ4N30.Z791cAUdW0i9HB7o7oJrQBtTurIv721RC35kLZfOLdY';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const userLookupForm = document.getElementById("userLookupForm");
+    const lookupEmail = document.getElementById("lookupEmail");
+    const userInfo = document.getElementById("userInfo");
+    const userReports = document.getElementById("userReports");
+
+    userLookupForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = lookupEmail.value.trim().toLowerCase();
+      userInfo.innerHTML = "Loading...";
+      userReports.innerHTML = "";
+
+      // Fetch user info
+      const { data: users, error: userErr } = await supabase
+        .from("users")
+        .select("*")
+        .eq("email", email)
+        .limit(1);
+
+      if (userErr || !users || users.length === 0) {
+        userInfo.innerHTML = `<span style="color:red;">User not found.</span>`;
+        userReports.innerHTML = "";
+        return;
+      }
+
+      const user = users[0];
+      userInfo.innerHTML = `
+        <div class="user-info-card">
+          <div><b>Name:</b> ${user.name || "-"}</div>
+          <div><b>Email:</b> ${user.email || "-"}</div>
+          <div><b>Phone:</b> ${user.phone || "-"}</div>
+          <div><b>Ward:</b> ${user.ward || "-"}</div>
+          <div><b>Joined:</b> ${user.created_at ? new Date(user.created_at).toLocaleDateString() : "-"}</div>
+        </div>
+      `;
+
+      // Fetch user's reports
+      userReports.innerHTML = "Loading your reports...";
+      const { data: reports, error: reportErr } = await supabase
+        .from("reports")
+        .select("*")
+        .eq("email", email)
+        .order("created_at", { ascending: false });
+
+      if (reportErr) {
+        userReports.innerHTML = `<span style="color:red;">Error loading reports.</span>`;
+        return;
+      }
+
+      if (!reports || reports.length === 0) {
+        userReports.innerHTML = "<em>No reports submitted yet.</em>";
+        return;
+      }
+
+      userReports.innerHTML = `
+        <h3 style="margin-bottom:8px;">Your Report Progress</h3>
+        <div class="report-list">
+          ${reports.map(r => `
+            <div class="report-card">
+              <img class="report-photo" src="${r.photo_url || 'https://via.placeholder.com/90x90?text=Photo'}" alt="Report Photo" />
+              <div class="report-details">
+                <div><b>Category:</b> ${r.category || "-"}</div>
+                <div><b>Severity:</b> ${r.severity || "-"}</div>
+                <div><b>Description:</b> ${r.description || "-"}</div>
+                <div><b>Status:</b> <span class="status ${r.status && r.status.toLowerCase()}">${r.status || "-"}</span></div>
+                <div><b>Submitted:</b> ${r.created_at ? new Date(r.created_at).toLocaleString() : "-"}</div>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    });
+  </script>
+</body>
+</html>

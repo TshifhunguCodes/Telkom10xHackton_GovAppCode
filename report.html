@@ -13,7 +13,10 @@
         <div class="logo" aria-hidden="true"></div>
         <h1>Government Report</h1>
       </div>
-      <a href="Login.html" class="btn-outline" style="margin-left:auto;">Back to Login</a>
+      <div>
+        <a href="Login.html" class="btn-outline" style="margin-left:auto;">Back to Login</a>
+        <a href="user-dash.html" class="btn-outline" style="margin-left:12px;">Dash</a>
+      </div>
     </div>
   </header>
   <main class="container">
@@ -22,16 +25,16 @@
         <h2>Report an Issue</h2>
         <p class="subtle">Submit a new service delivery issue with photos and location.</p>
         <form id="issueForm">
-          <label for="fullName">Your Name (optional)</label>
+          <label for="fullName">Your Name</label>
           <input id="fullName" type="text" placeholder="Jane Citizen" />
 
           <div class="row">
             <div>
-              <label for="email">Email (optional)</label>
+              <label for="email">Email</label>
               <input id="email" type="email" placeholder="name@example.com" />
             </div>
             <div>
-              <label for="phone">Phone (optional)</label>
+              <label for="phone">Phone</label>
               <input id="phone" type="tel" placeholder="060 123 4567" />
             </div>
           </div>
@@ -58,7 +61,7 @@
               </select>
             </div>
             <div>
-              <label for="reference">Reference (optional)</label>
+              <label for="reference">Reference</label>
               <input id="reference" type="text" placeholder="e.g., Street/Block, Pole ID, etc." />
             </div>
           </div>
@@ -69,7 +72,14 @@
           <div class="row">
             <div>
               <label for="photo">Add Photo</label>
-              <input id="photo" type="file" accept="image/*" capture="environment" />
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input id="photo" type="file" accept="image/*" capture="environment" style="display:none;" />
+                <label for="photo" id="photoLabel" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:#f3f3f3;border:1px solid #ddd;">
+                  <!-- SVG icon -->
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather feather-share"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+                  <span>Add Photo</span>
+                </label>
+              </div>
               <div id="photoPreviewWrap" class="subtle" style="margin-top:8px"></div>
             </div>
             <div>
@@ -80,7 +90,8 @@
               </div>
               <div class="row" style="margin-top:8px">
                 <button type="button" class="btn-outline" id="btnPickLocation">Pick Location on Map</button>
-                <span class="subtle" style="margin-left:8px;">Drop a pin on Google Maps, copy coordinates, and paste here.</span>
+                <button type="button" class="btn-outline" id="btnUseLocation" style="margin-left:8px;">Use My Location</button>
+                <span class="subtle" style="margin-left:8px;">Drop a pin on Google Maps, copy coordinates, or use your current location.</span>
               </div>
             </div>
           </div>
@@ -117,6 +128,7 @@ const latInput = document.getElementById("lat");
 const lngInput = document.getElementById("lng");
 const photoPreviewWrap = document.getElementById("photoPreviewWrap");
 const btnPickLocation = document.getElementById("btnPickLocation");
+const btnUseLocation = document.getElementById("btnUseLocation");
 
 // --- PHOTO PREVIEW ---
 photoInput.addEventListener("change", async () => {
@@ -137,6 +149,30 @@ photoInput.addEventListener("change", async () => {
 // --- PICK LOCATION BUTTON ---
 btnPickLocation.addEventListener("click", () => {
   window.open("https://www.google.com/maps", "_blank");
+});
+
+// --- USE CURRENT LOCATION BUTTON ---
+btnUseLocation.addEventListener("click", () => {
+  if (!navigator.geolocation) {
+    alert("Geolocation is not supported by your browser.");
+    return;
+  }
+  btnUseLocation.disabled = true;
+  btnUseLocation.textContent = "Locating...";
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      latInput.value = pos.coords.latitude.toFixed(6);
+      lngInput.value = pos.coords.longitude.toFixed(6);
+      btnUseLocation.disabled = false;
+      btnUseLocation.textContent = "Use My Location";
+    },
+    (err) => {
+      alert("Unable to get your location: " + err.message);
+      btnUseLocation.disabled = false;
+      btnUseLocation.textContent = "Use My Location";
+    },
+    { enableHighAccuracy: true, timeout: 15000 }
+  );
 });
 
 // --- PHOTO UPLOAD FUNCTION ---
@@ -197,6 +233,7 @@ form.addEventListener("submit", async (e) => {
     form.reset();
     photoPreviewWrap.innerHTML = "";
   }
+  
 });
 </script>
 </body>
