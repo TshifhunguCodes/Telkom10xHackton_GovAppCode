@@ -66,6 +66,40 @@
       .sidebar{ width:200px }
       .stats{ grid-template-columns:1fr 1fr }
     }
+
+    /* Add styles for card layout */
+    .problem-card-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 18px;
+      margin-top: 18px;
+    }
+    .problem-card {
+      display: flex;
+      background: var(--card);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+      gap: 18px;
+      align-items: flex-start;
+    }
+    .card-img {
+      flex: 0 0 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    @media (max-width: 600px) {
+      .problem-card-list { grid-template-columns: 1fr; }
+      .problem-card { flex-direction: column; align-items: stretch; }
+      .card-img { justify-content: flex-start; }
+    }
   </style>
 </head>
 <body>
@@ -272,27 +306,41 @@
     }
 
     // -----------------------------
-    // PROBLEMS (LIVE TABLE)
+    // PROBLEMS (LIVE CARD LAYOUT)
     // -----------------------------
+    const demoImages = [
+      "pictures/streetLight.jpg", // leaking pipe
+      "pictures/water.jpg", // potholes
+      "pictures/potholes.jpg"  // broken streetlight
+    ];
+
+    function getDemoPhoto(idx) {
+      // Cycle through demo images for each card
+      return demoImages[idx % demoImages.length];
+    }
+
     async function renderProblems(){
       const { data: problems = [], error } = await supabase.from("reports").select("*").order("created_at", { ascending: false });
-      const rows = problems.map(p => `
-        <tr data-id="${p.id}">
-          <td>
-            <strong>${p.name || "-"}</strong><br/>
-            ${p.email || "-"}<br/>
-            ${p.phone || "-"}
-          </td>
-          <td>${p.category || "-"}</td>
-          <td>${p.severity || "-"}</td>
-          <td>${p.description || "-"}</td>
-          <td>${p.latitude && p.longitude ? `${p.latitude.toFixed(3)}, ${p.longitude.toFixed(3)}` : "-"}</td>
-          <td><span class="status ${p.status && p.status.toLowerCase()}">${p.status || "-"}</span></td>
-          <td class="actions">
-            <button class="resolve-btn" onclick="window.updateStatus(${p.id}, 'Resolved')">Resolve</button>
-            <button class="pending-btn" onclick="window.updateStatus(${p.id}, 'Pending')">Pending</button>
-          </td>
-        </tr>
+
+      const cards = problems.map((p, idx) => `
+        <div class="problem-card">
+          <div class="card-img">
+            <img src="${p.photo_url ? p.photo_url : getDemoPhoto(idx)}" alt="User Photo" width="120" height="120" style="border-radius:10px;object-fit:cover;" />
+          </div>
+          <div class="card-info">
+            <div><strong>${p.name || "-"}</strong></div>
+            <div class="muted">${p.email || "-"} | ${p.phone || "-"}</div>
+            <div><b>Category:</b> ${p.category || "-"}</div>
+            <div><b>Severity:</b> ${p.severity || "-"}</div>
+            <div><b>Description:</b> ${p.description || "-"}</div>
+            <div><b>Location:</b> ${p.latitude && p.longitude ? `${p.latitude.toFixed(3)}, ${p.longitude.toFixed(3)}` : "-"}</div>
+            <div><span class="status ${p.status && p.status.toLowerCase()}">${p.status || "-"}</span></div>
+            <div class="actions" style="margin-top:10px;">
+              <button class="resolve-btn">Resolve</button>
+              <button class="pending-btn">Pending</button>
+            </div>
+          </div>
+        </div>
       `).join("");
 
       content.innerHTML = `
@@ -300,33 +348,20 @@
         <div class="toolbar">
           <input class="search" id="probSearch" placeholder="Search citizen, category, or status..." />
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Citizen</th>
-              <th>Category</th>
-              <th>Severity</th>
-              <th>Description</th>
-              <th>Location</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="problemsBody">${rows}</tbody>
-        </table>
+        <div class="problem-card-list">${cards || "<em>No issues reported yet.</em>"}</div>
       `;
 
       // Attach event listeners to action buttons
       setTimeout(() => {
-        document.querySelectorAll('.resolve-btn').forEach(btn => {
+        document.querySelectorAll('.resolve-btn').forEach((btn, idx) => {
           btn.addEventListener('click', async function() {
-            const id = this.closest('tr').dataset.id;
+            const id = problems[idx].id;
             await updateStatus(id, 'Resolved');
           });
         });
-        document.querySelectorAll('.pending-btn').forEach(btn => {
+        document.querySelectorAll('.pending-btn').forEach((btn, idx) => {
           btn.addEventListener('click', async function() {
-            const id = this.closest('tr').dataset.id;
+            const id = problems[idx].id;
             await updateStatus(id, 'Pending');
           });
         });
@@ -341,23 +376,25 @@
           (p.category && p.category.toLowerCase().includes(q)) ||
           (p.status && p.status.toLowerCase().includes(q))
         );
-        document.getElementById("problemsBody").innerHTML = filtered.map(p => `
-          <tr>
-            <td>
-              <strong>${p.name || "-"}</strong><br/>
-              ${p.email || "-"}<br/>
-              ${p.phone || "-"}
-            </td>
-            <td>${p.category || "-"}</td>
-            <td>${p.severity || "-"}</td>
-            <td>${p.description || "-"}</td>
-            <td>${p.latitude && p.longitude ? `${p.latitude.toFixed(3)}, ${p.longitude.toFixed(3)}` : "-"}</td>
-            <td><span class="status ${p.status && p.status.toLowerCase()}">${p.status || "-"}</span></td>
-            <td class="actions">
-              <button class="resolve-btn" onclick="window.updateStatus(${p.id}, 'Resolved')">Resolve</button>
-              <button class="pending-btn" onclick="window.updateStatus(${p.id}, 'Pending')">Pending</button>
-            </td>
-          </tr>
+        document.querySelector(".problem-card-list").innerHTML = filtered.map(p => `
+          <div class="problem-card">
+            <div class="card-img">
+              <img src="${p.photo_url ? p.photo_url : getDemoPhoto(idx)}" alt="User Photo" width="120" height="120" style="border-radius:10px;object-fit:cover;" />
+            </div>
+            <div class="card-info">
+              <div><strong>${p.name || "-"}</strong></div>
+              <div class="muted">${p.email || "-"} | ${p.phone || "-"}</div>
+              <div><b>Category:</b> ${p.category || "-"}</div>
+              <div><b>Severity:</b> ${p.severity || "-"}</div>
+              <div><b>Description:</b> ${p.description || "-"}</div>
+              <div><b>Location:</b> ${p.latitude && p.longitude ? `${p.latitude.toFixed(3)}, ${p.longitude.toFixed(3)}` : "-"}</div>
+              <div><span class="status ${p.status && p.status.toLowerCase()}">${p.status || "-"}</span></div>
+              <div class="actions" style="margin-top:10px;">
+                <button class="resolve-btn">Resolve</button>
+                <button class="pending-btn">Pending</button>
+              </div>
+            </div>
+          </div>
         `).join("");
       };
     }
