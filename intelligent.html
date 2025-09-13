@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Infrastructure Reports</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body class="bg-gray-50 text-gray-800">
+  <div class="p-6 max-w-7xl mx-auto">
+    <!-- Header -->
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">AI Infrastructure Reports</h1>
+      <p class="text-gray-500">Real-time insights from municipal infrastructure monitoring</p>
+    </div>
+
+    <!-- Top Stats -->
+    <div id="topStats" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6"></div>
+
+    <!-- Service Cards -->
+    <div id="serviceCards" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6"></div>
+  </div>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+    const supabase = createClient(
+      "https://cwgidwpxsldxzmknpobq.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3Z2lkd3B4c2xkeHpta25wb2JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY0OTI0ODcsImV4cCI6MjA3MjA2ODQ4N30.Z791cAUdW0i9HB7o7oJrQBtTurIv721RC35kLZfOLdY"
+    );
+
+    async function loadData() {
+      const { data: reports = [] } = await supabase.from("reports").select("*");
+
+      // Overall stats
+      const totalReports = reports.length;
+      const resolvedToday = reports.filter(r => r.status === "Resolved" && new Date(r.updated_at).toDateString() === new Date().toDateString()).length;
+      const criticalIssues = reports.filter(r => r.severity === "Critical").length;
+      const avgResponse = calcAvgResponse(reports);
+
+      document.getElementById("topStats").innerHTML = `
+        ${statCard("Total Reports", totalReports, "📈", "bg-blue-50")}
+        ${statCard("Resolved Today", resolvedToday, "✅", "bg-green-50")}
+        ${statCard("Avg Response", avgResponse + "h", "⏰", "bg-yellow-50")}
+        ${statCard("Critical Issues", criticalIssues, "⚠️", "bg-red-50")}
+      `;
+
+      // Service categories
+      const categories = ["Water Systems", "Road Potholes", "Electricity", "Street Lights"];
+      const icons = { 
+        "Water Systems": "💧", 
+        "Road Potholes": "🛠️", 
+        "Electricity": "⚡", 
+        "Street Lights": "💡" 
+      };
+
+      const html = categories.map(cat => {
+        const catReports = reports.filter(r => r.category === cat);
+        const total = catReports.length;
+        const resolved = catReports.filter(r => r.status === "Resolved").length;
+        const critical = catReports.filter(r => r.severity === "Critical").length;
+        const pending = total - resolved;
+        const rate = total ? Math.round((resolved/total)*100) : 0;
+        const lastUpdate = catReports.length ? new Date(catReports[0].updated_at).toLocaleTimeString() : "N/A";
+
+        return serviceCard(cat, icons[cat], total, resolved, critical, pending, rate, lastUpdate);
+      }).join("");
+
+      document.getElementById("serviceCards").innerHTML = html;
+    }
+
+    function statCard(title, value, icon, bg){
+      return `
+        <div class="p-4 rounded-lg shadow bg-white">
+          <div class="flex items-center justify-between">
+            <p class="text-sm text-gray-600">${title}</p>
+            <span class="text-xl">${icon}</span>
+          </div>
+          <p class="mt-2 text-2xl font-bold">${value}</p>
+        </div>
+      `;
+    }
+
+    function serviceCard(title, icon, total, resolved, critical, pending, rate, lastUpdate){
+      return `
+        <div class="bg-white rounded-xl shadow p-5">
+          <div class="flex items-center gap-3">
+            <div class="text-2xl">${icon}</div>
+            <div>
+              <h3 class="font-semibold text-gray-900">${title}</h3>
+              <p class="text-sm text-gray-500">Last updated ${lastUpdate}</p>
+            </div>
+          </div>
+          <p class="text-3xl font-bold mt-2">${total}</p>
+          <div class="flex gap-2 mt-2">
+            <span class="px-2 py-1 text-sm bg-green-100 text-green-700 rounded">${resolved} Resolved</span>
+            <span class="px-2 py-1 text-sm bg-red-100 text-red-700 rounded">${critical} Critical</span>
+          </div>
+          <div class="mt-3">
+            <div class="flex justify-between text-sm">
+              <span>Resolution Rate</span><span>${rate}%</span>
+            </div>
+            <div class="h-2 bg-gray-200 rounded mt-1">
+              <div class="h-2 bg-blue-500 rounded" style="width:${rate}%"></div>
+            </div>
+          </div>
+          <div class="flex justify-between text-sm mt-2">
+            <span>${pending} Pending</span>
+            <span>${resolved} Resolved</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function calcAvgResponse(reports){
+      // Placeholder: calculate in hours
+      const resolvedReports = reports.filter(r=>r.status==="Resolved" && r.created_at && r.updated_at);
+      if(!resolvedReports.length) return 0;
+      const totalHrs = resolvedReports.reduce((sum,r)=>{
+        return sum + (new Date(r.updated_at) - new Date(r.created_at))/(1000*60*60);
+      },0);
+      return (totalHrs / resolvedReports.length).toFixed(1);
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
