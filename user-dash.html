@@ -166,6 +166,16 @@
                 "Sanitation": "0800-456-789",
                 "Other": "0800-000-000"
               };
+              // Default images for each category
+              const categoryImages = {
+                "Water": "pictures/water.jpg",
+                "Electricity": "pictures/electric.webp",
+                "Street Lights": "pictures/lights.webp",
+                "Roads": "pictures/potholes.jpg",
+                "Sanitation": "pictures/solutions.jpg",
+                "Potholes": "pictures/potholes.jpg",
+                "Other": "pictures/electric.webp"
+              };
               return reports.map(r => {
                 const sev = (r.severity || "-").toString();
                 const cat = (r.category || "Other").toString();
@@ -188,9 +198,12 @@
                 const phone = categoryNumbers[cat] || categoryNumbers["Other"];
                 // Prompt for overdue
                 const overduePrompt = isOverdue ? `<div style='color:#b30000;font-weight:bold;margin-top:8px;'>This issue is overdue. Please call <a href='tel:${phone}' style='color:#b30000;text-decoration:underline;'>${phone}</a> to report directly to the ${cat} service delivery team.</div>` : "";
+                // Pick default image for category if no photo_url
+                const defaultImg = categoryImages[cat] || categoryImages["Other"];
+                const photoSrc = r.photo_url || defaultImg;
                 return `
                   <div class="report-card">
-                    <img class="report-photo" src="${r.photo_url || 'https://via.placeholder.com/90x90?text=Photo'}" alt="Report Photo" />
+                    <img class="report-photo" src="${photoSrc}" alt="Report Photo" />
                     <div class="report-details">
                       <div><b>Category:</b> ${cat}</div>
                       <div><b>Severity:</b> ${sev}</div>
