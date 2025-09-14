@@ -149,20 +149,64 @@
       userReports.innerHTML = `
         <h3 style="margin-bottom:8px;">Your Report Progress</h3>
         <div class="report-list">
-          ${reports.map(r => `
-            <div class="report-card">
-              <img class="report-photo" src="${r.photo_url || 'https://via.placeholder.com/90x90?text=Photo'}" alt="Report Photo" />
-              <div class="report-details">
-                <div><b>Category:</b> ${r.category || "-"}</div>
-                <div><b>Severity:</b> ${r.severity || "-"}</div>
-                <div><b>Description:</b> ${r.description || "-"}</div>
-                <div><b>Status:</b> <span class="status ${r.status && r.status.toLowerCase()}">${r.status || "-"}</span></div>
-                <div><b>Submitted:</b> ${r.created_at ? new Date(r.created_at).toLocaleString() : "-"}</div>
-              </div>
-            </div>
-          `).join("")}
-        </div>
-      `;
+            ${(() => {
+              // Severity targets in hours
+              const severityTargets = {
+                "Critical": { response: 2, resolution: 8 },
+                "High": { response: 4, resolution: 24 },
+                "Medium": { response: 12, resolution: 72 },
+                "Low": { response: 24, resolution: 168 }, // 1 week
+              };
+              const now = new Date();
+              // Category to phone number mapping
+              const categoryNumbers = {
+                "Water": "0800-123-456",
+                "Electricity": "0800-234-567",
+                "Roads": "0800-345-678",
+                "Sanitation": "0800-456-789",
+                "Other": "0800-000-000"
+              };
+              return reports.map(r => {
+                const sev = (r.severity || "-").toString();
+                const cat = (r.category || "Other").toString();
+                const targets = severityTargets[sev] || { response: '-', resolution: '-' };
+                let submitted = r.created_at ? new Date(r.created_at) : null;
+                let responseDue = submitted && targets.response !== '-' ? new Date(submitted.getTime() + targets.response * 60 * 60 * 1000) : null;
+                let resolutionDue = submitted && targets.resolution !== '-' ? new Date(submitted.getTime() + targets.resolution * 60 * 60 * 1000) : null;
+                // Helper for overdue/remaining
+                function timeStatus(due) {
+                  if (!due) return '-';
+                  const diff = due - now;
+                  if (diff < 0) return `<span style='color:red;'>Overdue</span>`;
+                  const hours = Math.floor(diff / (1000*60*60));
+                  const mins = Math.floor((diff % (1000*60*60)) / (1000*60));
+                  return `${hours}h ${mins}m left`;
+                }
+                // Check if resolution is overdue
+                const isOverdue = resolutionDue && (resolutionDue - now < 0);
+                // Get the phone number for the category
+                const phone = categoryNumbers[cat] || categoryNumbers["Other"];
+                // Prompt for overdue
+                const overduePrompt = isOverdue ? `<div style='color:#b30000;font-weight:bold;margin-top:8px;'>This issue is overdue. Please call <a href='tel:${phone}' style='color:#b30000;text-decoration:underline;'>${phone}</a> to report directly to the ${cat} service delivery team.</div>` : "";
+                return `
+                  <div class="report-card">
+                    <img class="report-photo" src="${r.photo_url || 'https://via.placeholder.com/90x90?text=Photo'}" alt="Report Photo" />
+                    <div class="report-details">
+                      <div><b>Category:</b> ${cat}</div>
+                      <div><b>Severity:</b> ${sev}</div>
+                      <div><b>Description:</b> ${r.description || "-"}</div>
+                      <div><b>Status:</b> <span class="status ${r.status && r.status.toLowerCase()}">${r.status || "-"}</span></div>
+                      <div><b>Submitted:</b> ${submitted ? submitted.toLocaleString() : "-"}</div>
+                      <div><b>Target Response:</b> ${responseDue ? responseDue.toLocaleString() : '-'} (${targets.response !== '-' ? targets.response + 'h' : '-'})<br><small>${timeStatus(responseDue)}</small></div>
+                      <div><b>Target Resolution:</b> ${resolutionDue ? resolutionDue.toLocaleString() : '-'} (${targets.resolution !== '-' ? targets.resolution + 'h' : '-'})<br><small>${timeStatus(resolutionDue)}</small></div>
+                      ${overduePrompt}
+                    </div>
+                  </div>
+                `;
+              }).join("");
+            })()}
+          </div>
+        `;
     });
   </script>
 </body>
