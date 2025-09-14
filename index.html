@@ -9,26 +9,38 @@
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #fff;
+      background: linear-gradient(180deg, #e6f7e6 0%, #fff 100%);
       color: #333;
     }
 
-    /* Header */
+    /* Fixed Header */
     header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 15px 40px;
       border-bottom: 2px solid #f0f0f0;
+      background: #fff;
+      z-index: 1000;
+      box-sizing: border-box;
+      box-shadow: 0 2px 16px 0 rgba(0,153,102,0.07);
     }
 
     header img {
       height: 40px;
+      max-width: 180px;
+      width: auto;
+      display: block;
     }
 
     nav {
       display: flex;
-      gap: 20px;
+      gap: 32px;
+      flex-wrap: wrap;
     }
 
     nav a {
@@ -36,48 +48,118 @@
       font-weight: bold;
       color: #008000;
       transition: 0.3s;
+      font-size: 18px;
+      white-space: nowrap;
     }
 
     nav a:hover {
       color: #00cc66;
     }
 
-    /* Section Title */
-    .section-title {
-      text-align: center;
-      color: #00cc66;
-      font-size: 28px;
-      font-weight: bold;
-      margin: 40px 0 10px;
+    @media (max-width: 900px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 15px 10px;
+      }
+      nav {
+        margin-top: 10px;
+        gap: 18px;
+      }
     }
 
-    /* Challenge Section */
+    .spacer {
+      height: 80px;
+    }
+
+    /* Section wrapper with soft shadow and seamless look */
+    section,
     .challenge {
       display: flex;
+      align-items: center;
       justify-content: center;
-      align-items: flex-start;
       gap: 40px;
-      padding: 40px;
+      padding: 60px 10%;
+      border-radius: 24px;
+      box-shadow: 0 8px 32px 0 rgba(0,153,102,0.08);
+      background: rgba(255, 255, 255, 0.7); /* very light green, almost white */
+      margin: 40px auto;
+      max-width: 1200px;
+      position: relative;
     }
 
+    .white-bg {
+      background: rgba(255,255,255,0.85);
+      box-shadow: 0 8px 32px 0 rgba(0,153,102,0.04);
+    }
+
+    .green-bg {
+      background: rgba(230,247,230,0.85);
+      box-shadow: 0 8px 32px 0 rgba(0,153,102,0.08);
+    }
+
+    .img-container,
     .challenge img {
-      width: 350px;
+      flex: 1;
+      max-width: 400px;
+      height: 300px;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 10px 25px rgba(0, 153, 102, 0.12);
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
+    .img-container img,
+    .challenge img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      border-radius: 18px;
+    }
+
+    .text-box,
     .challenge-text {
       max-width: 600px;
+      flex: 1;
     }
 
+    .text-box h2,
     .challenge-text h2 {
-      color: #00cc66;
-      font-size: 24px;
+      color: #009966;
+      font-size: 28px;
       font-weight: bold;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
     }
 
+    .text-box p,
     .challenge-text p {
       font-size: 16px;
       line-height: 1.6;
+    }
+
+    .section-title {
+      text-align: center;
+      color: #222; /* Changed from #fff to black */
+      font-size: 28px;
+      font-weight: bold;
+      margin: 40px 0 10px;
+      background: none;
+    }
+
+    @media (max-width: 900px) {
+      section, .challenge {
+        flex-direction: column;
+        padding: 30px 5%;
+        gap: 24px;
+      }
+      .img-container, .challenge img {
+        max-width: 100%;
+        height: 200px;
+      }
     }
   </style>
 </head>
@@ -85,7 +167,6 @@
 
   <!-- HEADER -->
   <header>
-
      <a href="AdminPage.html">
       <img src="pictures/Ministry-DCDT.jpg" alt="GovChat Logo">
      </a>
@@ -98,15 +179,12 @@
     </nav>
   </header>
 
-  <!-- SECTION TITLE -->
+  <div class="spacer"></div>
+
   <h1 class="section-title">MUNICIPAL SERVICE DELIVERY</h1>
 
-  <!-- CHALLENGE SECTION -->
-  <div class="challenge">
-    <!-- Chart image -->
+  <div class="challenge green-bg">
     <img src="pictures/OIP.webp" alt="Service Delivery Chart">
-    
-    <!-- Text -->
     <div class="challenge-text">
       <h2>CHALLENGE</h2>
       <p>
@@ -125,5 +203,40 @@
     </div>
   </div>
 
+   <section class="white-bg">
+    <div class="img-container">
+      <img src= "pictures/managers.webp" alt="Improvement">
+    </div>
+    <div class="text-box">
+      <h2>Improvement</h2>
+      <p>
+        In many underdeveloped areas, residents face challenges such as poor infrastructure,
+         slow service delivery, unreported issues, and lack of transparency. Citizens often struggle
+          to have their complaints heard or resolved in a timely manner. With this application, municipal
+           managers can track reported issues in real time, prioritize critical problems, allocate resources efficiently,
+            and make informed decisions using AI-driven insights, ensuring that services reach those who need them most and
+             improving the overall quality of life in these communities.
+      </p>
+    </div>
+  </section>
+
+  <section class="green-bg">
+    <div class="img-container">
+      <img src= "pictures/solutions.jpg" alt="Solution">
+    </div>
+    <div class="text-box">
+      <h2>Solution</h2>
+      <p>
+        To address these challenges, the application provides a central platform for reporting and managing issues, allowing citizens to submit
+         complaints easily and track their progress. Municipal managers can analyze reports using AI, identify trends, and prioritize
+          interventions, ensuring resources are allocated where they are most needed. By improving transparency, speeding up problem resolution, and
+           enabling data-driven decision-making, the system offers practical, efficient solutions that directly improve service delivery and community wellbeing.
+      </p>
+    </div>
+  </section>
+
+ 
+
 </body>
 </html>
+
