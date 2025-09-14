@@ -184,9 +184,9 @@
   return rlat + ":" + rlng;
     }
 
-    // Group and cluster reports (category + approx location + textual similarity)
+    // Group and cluster reports by category and approximate location only
     function clusterReports(reports, opts = {}) {
-      const { locationPrecision = 2, similarityThreshold = 0.45, minClusterSize = 3 } = opts;
+      const { locationPrecision = 2, minClusterSize = 2 } = opts;
       const buckets = {};
       reports.forEach(r => {
         const loc = locationKey(r.latitude, r.longitude, locationPrecision);
@@ -198,31 +198,15 @@
 
       const clusters = [];
       Object.values(buckets).forEach(bucket => {
-        const used = new Array(bucket.length).fill(false);
-        for(let i=0;i<bucket.length;i++){
-          if(used[i]) continue;
-          const base = bucket[i];
-          const cluster = [base];
-          used[i] = true;
-          for(let j=i+1;j<bucket.length;j++){
-            if(used[j]) continue;
-            const cand = bucket[j];
-            const sim = jaccardSimilarity(base.description || "", cand.description || "");
-            if(sim >= similarityThreshold){
-              cluster.push(cand);
-              used[j] = true;
-            }
-          }
-          if(cluster.length >= minClusterSize){
-            clusters.push({
-              category: base.category || "Uncategorized",
-              location: locationKey(base.latitude, base.longitude, locationPrecision),
-              count: cluster.length,
-              sample_description: cluster[0].description || "",
-              severity_counts: cluster.reduce(function(acc, x) { acc[x.severity] = (acc[x.severity] || 0) + 1; return acc; }, {}),
-              reports: cluster.slice().sort(function(a, b) { return new Date(b.created_at) - new Date(a.created_at); })
-            });
-          }
+        if (bucket.length >= minClusterSize) {
+          clusters.push({
+            category: bucket[0].category || "Uncategorized",
+            location: locationKey(bucket[0].latitude, bucket[0].longitude, locationPrecision),
+            count: bucket.length,
+            sample_description: bucket[0].description || "",
+            severity_counts: bucket.reduce(function(acc, x) { acc[x.severity] = (acc[x.severity] || 0) + 1; return acc; }, {}),
+            reports: bucket.slice().sort(function(a, b) { return new Date(b.created_at) - new Date(a.created_at); })
+          });
         }
       });
       return clusters;
@@ -438,8 +422,8 @@
         return;
       }
 
-      // cluster reports
-      const clusters = clusterReports(reports, { locationPrecision: 2, similarityThreshold: 0.45, minClusterSize: 3 });
+  // cluster reports by location only
+  const clusters = clusterReports(reports, { locationPrecision: 2, minClusterSize: 2 });
 
       if(!clusters.length){
         intelDiv.innerHTML = `<p>✅ No major clusters detected. No immediate mass reporting in one area.</p>`;
