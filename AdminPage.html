@@ -99,15 +99,25 @@
       .problem-card { flex-direction: column; align-items: stretch; }
       .card-img { justify-content: flex-start; }
     }
+
+    .alert-box {
+      background: #fff8e1;
+      border: 1px solid #ffecb3;
+      padding: 12px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
   </style>
 </head>
 <body>
   <aside class="sidebar">
     <div class="brand">Municipal Admin</div>
-    <button class="nav-btn active" id="btn-dashboard">📊 Dashboard</button>
-    <button class="nav-btn" id="btn-users">👤 Users</button>
-    <button class="nav-btn" id="btn-problems">⚠️ Problems</button>
-    <button class="nav-btn" id="btn-intel">📈 Intelligent Report</button>
+    <!-- data-section attributes used by the delegated listener -->
+    <button class="nav-btn active" id="btn-dashboard" data-section="dashboard">📊 Dashboard</button>
+    <button class="nav-btn" id="btn-users" data-section="users">👤 Users</button>
+    <button class="nav-btn" id="btn-problems" data-section="problems">⚠️ Problems</button>
+    <button class="nav-btn" id="btn-intel" data-section="intel">📈 Intelligent Report</button>
     <div class="spacer"></div>
     <div class="footer-note">Live data via Supabase</div>
   </aside>
@@ -117,43 +127,108 @@
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
+    // --- Supabase config (exact values you provided) ---
     const SUPABASE_URL = 'https://cwgidwpxsldxzmknpobq.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN3Z2lkd3B4c2xkeHpta25wb2JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY0OTI0ODcsImV4cCI6MjA3MjA2ODQ4N30.Z791cAUdW0i9HB7o7oJrQBtTurIv721RC35kLZfOLdY';
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // state
     let currentSection = "dashboard";
     let statusChart = null;
     let severityChart = null;
+    let categoryChart = null;
+    let wardChart = null;
 
-    const btnDashboard = document.getElementById("btn-dashboard");
-    const btnUsers = document.getElementById("btn-users");
-    const btnProblems = document.getElementById("btn-problems");
-    const btnIntel = document.getElementById("btn-intel");
     const content = document.getElementById("content");
 
-    btnDashboard.onclick = () => setSection("dashboard");
-    btnUsers.onclick = () => setSection("users");
-    btnProblems.onclick = () => setSection("problems");
-    btnIntel.onclick = () => {
-      window.location.href = "intelligent.html";
-    };
+    // Delegated click handler for sidebar navigation (robust against content re-renders)
+    const sidebar = document.querySelector('.sidebar');
+    sidebar.addEventListener('click', (e) => {
+      const btn = e.target.closest('.nav-btn');
+      if (!btn) return;
+      const section = btn.dataset.section;
+      if (section) setSection(section);
+    });
 
     function setSection(section){
-      currentSection = section;
-      document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
-      if(section==="dashboard") btnDashboard.classList.add("active");
-      if(section==="users") btnUsers.classList.add("active");
-      if(section==="problems") btnProblems.classList.add("active");
-      if(section==="intel") btnIntel.classList.add("active");
+  currentSection = section;
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+  const btn = document.querySelector(`.nav-btn[data-section='${section}']`);
+  if(btn) btn.classList.add("active");
 
-      if(section==="dashboard") renderDashboard();
-      if(section==="users") renderUsers();
-      if(section==="problems") renderProblems();
-      if(section==="intel") renderIntel();
+  if(section==="dashboard") renderDashboard();
+  else if(section==="users") renderUsers();
+  else if(section==="problems") renderProblems();
+  else if(section==="intel") renderIntel();
     }
 
-    // DASHBOARD
+    // ---------- UTILITIES for AI-like clustering ----------
+    function normalizeText(s){
+      if(!s) return "";
+      return s.toLowerCase().replace(/[^a-z0-9\s]/g," ").replace(/\s+/g," ").trim();
+    }
+    function jaccardSimilarity(a, b){
+      const sa = new Set(normalizeText(a).split(" ").filter(Boolean));
+      const sb = new Set(normalizeText(b).split(" ").filter(Boolean));
+      if(sa.size === 0 || sb.size === 0) return 0;
+      let inter = 0;
+      sa.forEach(x => { if(sb.has(x)) inter++; });
+      const uni = new Set([...sa, ...sb]).size;
+      return inter / uni;
+    }
+    function locationKey(lat, lng, precision = 2){
+  if(lat == null || lng == null) return "unknown";
+  const rlat = Math.round(Number(lat) * Math.pow(10, precision)) / Math.pow(10, precision);
+  const rlng = Math.round(Number(lng) * Math.pow(10, precision)) / Math.pow(10, precision);
+  return rlat + ":" + rlng;
+    }
+
+    // Group and cluster reports (category + approx location + textual similarity)
+    function clusterReports(reports, opts = {}) {
+      const { locationPrecision = 2, similarityThreshold = 0.45, minClusterSize = 3 } = opts;
+      const buckets = {};
+      reports.forEach(r => {
+        const loc = locationKey(r.latitude, r.longitude, locationPrecision);
+        const cat = r.category || "Uncategorized";
+        const key = cat + "||" + loc;
+        buckets[key] = buckets[key] || [];
+        buckets[key].push(r);
+      });
+
+      const clusters = [];
+      Object.values(buckets).forEach(bucket => {
+        const used = new Array(bucket.length).fill(false);
+        for(let i=0;i<bucket.length;i++){
+          if(used[i]) continue;
+          const base = bucket[i];
+          const cluster = [base];
+          used[i] = true;
+          for(let j=i+1;j<bucket.length;j++){
+            if(used[j]) continue;
+            const cand = bucket[j];
+            const sim = jaccardSimilarity(base.description || "", cand.description || "");
+            if(sim >= similarityThreshold){
+              cluster.push(cand);
+              used[j] = true;
+            }
+          }
+          if(cluster.length >= minClusterSize){
+            clusters.push({
+              category: base.category || "Uncategorized",
+              location: locationKey(base.latitude, base.longitude, locationPrecision),
+              count: cluster.length,
+              sample_description: cluster[0].description || "",
+              severity_counts: cluster.reduce(function(acc, x) { acc[x.severity] = (acc[x.severity] || 0) + 1; return acc; }, {}),
+              reports: cluster.slice().sort(function(a, b) { return new Date(b.created_at) - new Date(a.created_at); })
+            });
+          }
+        }
+      });
+      return clusters;
+    }
+
+    // ---------- DASHBOARD ----------
     async function renderDashboard(){
       const { data: users = [] } = await supabase.from("users").select("*");
       const { data: problems = [] } = await supabase.from("reports").select("*");
@@ -164,7 +239,7 @@
       const resolved = problems.filter(p=>p.status==="Resolved").length;
 
       const sev = { Low:0, Medium:0, High:0, Critical:0 };
-      problems.forEach(p => { if(sev[p.severity]!==undefined) sev[p.severity]++; });
+      problems.forEach(p => { if(p.severity && sev[p.severity]!==undefined) sev[p.severity]++; });
 
       const catMap = {};
       problems.forEach(p => { catMap[p.category] = (catMap[p.category]||0)+1; });
@@ -202,8 +277,8 @@
 
       if(statusChart) statusChart.destroy();
       if(severityChart) severityChart.destroy();
-      if(window.categoryChart) window.categoryChart.destroy();
-      if(window.wardChart) window.wardChart.destroy();
+      if(categoryChart) categoryChart.destroy();
+      if(wardChart) wardChart.destroy();
 
       const ctxStatus = document.getElementById("statusPie").getContext("2d");
       statusChart = new Chart(ctxStatus, { type: "pie", data: { labels:["Pending","Resolved"], datasets:[{ data:[pending,resolved] }] } });
@@ -212,7 +287,7 @@
       severityChart = new Chart(ctxSev, { type: "bar", data: { labels:Object.keys(sev), datasets:[{ label:"Count", data:Object.values(sev) }]}, options:{ plugins:{ legend:{ display:false }}, responsive:true } });
 
       const ctxCat = document.getElementById("categoryBar").getContext("2d");
-      window.categoryChart = new Chart(ctxCat, { type: "bar", data: { labels: categories, datasets:[{ label:"Reports", data: categoryCounts }]}, options:{ plugins:{ legend:{ display:false }}, responsive:true } });
+      categoryChart = new Chart(ctxCat, { type: "bar", data: { labels: categories, datasets:[{ label:"Reports", data: categoryCounts }]}, options:{ plugins:{ legend:{ display:false }}, responsive:true } });
 
       const wardCounts = {};
       users.forEach(u => { wardCounts[u.ward] = (wardCounts[u.ward]||0)+1; });
@@ -220,10 +295,10 @@
       const wardData = wardLabels.map(w => wardCounts[w]);
 
       const ctxWard = document.getElementById("wardBar").getContext("2d");
-      window.wardChart = new Chart(ctxWard, { type: "bar", data: { labels: wardLabels, datasets:[{ label:"Users", data: wardData }]}, options:{ plugins:{ legend:{ display:false }}, responsive:true } });
+      wardChart = new Chart(ctxWard, { type: "bar", data: { labels: wardLabels, datasets:[{ label:"Users", data: wardData }]}, options:{ plugins:{ legend:{ display:false }}, responsive:true } });
     }
 
-    // USERS
+    // ---------- USERS ----------
     async function renderUsers(){
       const { data: users = [] } = await supabase.from("users").select("*");
       const rows = users.map(u => `
@@ -272,16 +347,26 @@
       };
     }
 
-    // PROBLEMS
+    // ---------- PROBLEMS ----------
     async function renderProblems(){
       const { data: problems = [] } = await supabase.from("reports").select("*").order("created_at",{ascending:false});
-      const demoImages = ["pictures/streetLight.jpg","pictures/water.jpg","pictures/potholes.jpg"];
-      function getDemoPhoto(idx){ return demoImages[idx % demoImages.length]; }
 
-      const renderCards = (list) => list.map((p, idx) => `
+      // Map categories to images
+      const demoImages = {
+        "Streetlight": "pictures/streetLight.jpg",
+        "Pothole": "pictures/potholes.jpg",
+        "Water": "pictures/water.jpg",
+        "Electricity": "pictures/electric.webp",
+        "Sanitation": "pictures/lights.webp"
+      };
+      function getDemoPhoto(category){
+        return demoImages[category] || "pictures/streetLight.jpg";
+      }
+
+      const renderCards = (list) => list.map((p) => `
         <div class="problem-card">
           <div class="card-img">
-            <img src="${p.photo_url ? p.photo_url : getDemoPhoto(idx)}" alt="User Photo" width="120" height="120" style="border-radius:10px;object-fit:cover;" />
+            <img src="${p.photo_url ? p.photo_url : getDemoPhoto(p.category)}" alt="User Photo" width="120" height="120" style="border-radius:10px;object-fit:cover;" />
           </div>
           <div class="card-info">
             <div><strong>${p.name || "-"}</strong></div>
@@ -289,7 +374,7 @@
             <div><b>Category:</b> ${p.category || "-"}</div>
             <div><b>Severity:</b> ${p.severity || "-"}</div>
             <div><b>Description:</b> ${p.description || "-"}</div>
-            <div><b>Location:</b> ${p.latitude && p.longitude ? `${p.latitude.toFixed(3)}, ${p.longitude.toFixed(3)}` : "-"}</div>
+            <div><b>Location:</b> ${p.latitude && p.longitude ? (Number(p.latitude).toFixed(3) + ', ' + Number(p.longitude).toFixed(3)) : '-'}</div>
             <div><span class="status ${p.status && p.status.toLowerCase()}">${p.status || "-"}</span></div>
             <div class="actions" style="margin-top:10px;">
               <button class="resolve-btn">Resolve</button>
@@ -334,15 +419,95 @@
       renderProblems();
     }
 
-    // INTELLIGENT REPORT
+    // ---------- INTELLIGENT REPORT (AI enhancement) ----------
     async function renderIntel(){
       content.innerHTML = `
         <h1>Intelligent Report</h1>
         <p>This section will provide AI-powered insights, trends, and predictions on municipal issues.</p>
+        <div id="intelContent"><em>Analyzing data...</em></div>
       `;
+
+      const intelDiv = document.getElementById("intelContent");
+      const { data: reports = [], error } = await supabase.from("reports").select("*").order("created_at",{ascending:false});
+      if(error){
+        intelDiv.innerHTML = `<p style="color:red">Error fetching reports: ${error.message}</p>`;
+        return;
+      }
+      if(!reports.length){
+        intelDiv.innerHTML = `<p>No reports to analyze.</p>`;
+        return;
+      }
+
+      // cluster reports
+      const clusters = clusterReports(reports, { locationPrecision: 2, similarityThreshold: 0.45, minClusterSize: 3 });
+
+      if(!clusters.length){
+        intelDiv.innerHTML = `<p>✅ No major clusters detected. No immediate mass reporting in one area.</p>`;
+        return;
+      }
+
+      // Show clusters and optionally persist them to alerts table (so admin can track)
+      const clusterHtml = clusters.map(c => {
+        const sevSummary = Object.entries(c.severity_counts).map(([k,v]) => `${k}:${v}`).join(", ");
+        const sample = c.reports[0];
+        return `
+          <div class="alert-box">
+            <strong>🚨 ${c.count} similar reports detected</strong><br/>
+            <b>Category:</b> ${c.category}<br/>
+            <b>Location (approx):</b> ${c.location}<br/>
+            <b>Sample description:</b> ${c.sample_description}<br/>
+            <b>Severity breakdown:</b> ${sevSummary}<br/>
+            <b>Latest report time:</b> ${new Date(sample.created_at).toLocaleString()}<br/>
+            <details><summary>View reports (${c.reports.length})</summary>
+              <ul>
+                ${c.reports.map(r => `<li><b>${r.name||'anon'}</b> — ${r.description || '-'} — ${r.status} — ${new Date(r.created_at).toLocaleString()}</li>`).join("")}
+              </ul>
+            </details>
+          </div>
+        `;
+      }).join("");
+
+      intelDiv.innerHTML = clusterHtml;
+
+      // Optional: insert clusters into alerts table to persist (prevent duplicates using a simple hash)
+      for(const c of clusters){
+        try {
+          const tenMinutesAgo = new Date(Date.now() - (10*60*1000)).toISOString();
+          const { data: existing } = await supabase.from("alerts")
+            .select("*")
+            .eq("category", c.category)
+            .eq("location", c.location)
+            .gte("created_at", tenMinutesAgo)
+            .limit(1);
+
+          if(!existing || existing.length === 0){
+            await supabase.from("alerts").insert({
+              category: c.category,
+              location: c.location,
+              report_count: c.count,
+              sample_description: c.sample_description
+            });
+          }
+        } catch (e) {
+          console.warn("Alert insert error (ignored):", e.message || e);
+        }
+      }
     }
 
+    // Real-time subscription: when new reports inserted, refresh intel/dashboard/problems if viewing
+    try {
+      supabase.channel('realtime-reports')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'reports' }, payload => {
+          if(currentSection === "intel") renderIntel();
+          if(currentSection === "dashboard") renderDashboard();
+          if(currentSection === "problems") renderProblems();
+        })
+        .subscribe();
+    } catch (e) {
+      console.warn("Realtime subscribe failed:", e.message || e);
+    }
+
+    // initial load
     setSection("dashboard");
   </script>
 </body>
-</html>
